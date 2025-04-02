@@ -18,13 +18,13 @@ export default defineConfig({
       {
         text: '项目文档',
         items: [
+          { text: '私有知识库配置', link: '/guide/introduction/knowledge' },
+          { text: '接入企业/个人微信', link: '/guide/introduction/weixin' },
           // { text: '安装文档', link: '/guide/introduction/index' },
           // { text: '部署文档', link: '/guide/introduction/deploy' },
           // { text: 'deepseek微调', link: '/guide/introduction/finetuning' },
-          // { text: '接入企业/个人微信', link: '/guide/introduction/roadmap' },
           // { text: 'ollama调用本地模型', link: '/guide/introduction/roadmap' },
           // { text: '微信/易支付/Stripe配置', link: '/guide/introduction/roadmap' },
-          // { text: '私有知识库配置', link: '/guide/introduction/roadmap' },
           // { text: 'AI翻唱/语音克隆/AIPPT配置', link: '/guide/introduction/roadmap' },
         ]
       }
