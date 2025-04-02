@@ -14,9 +14,6 @@ hero:
     - theme: brand
       text: 快速开始 ->
       link: /guide/introduction/index
-    - theme: alt
-      text: 中转API
-      link: https://api.pandarobot.chat/
 
 features:
   - icon: 📦
@@ -42,7 +39,7 @@ features:
   - icon: 📱
     title: 微信扩展功能
     details: 支持接入个人微信或企业微信，方便与微信生态深度整合，拓展应用场景
-    link: //guide/introduction/roadmap
+    link: /guide/introduction/weixin
     linkText: 微信扩展
   - icon: 🎬
     title: 强大的多媒体功能
