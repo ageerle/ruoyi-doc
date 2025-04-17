@@ -139,7 +139,7 @@ ollama pull quentinz/bge-large-zh-v1.5
 ::: info 配置本地模型
 
 如果想使用ollama中的本地模型,可以在模型中配置ollama-qwen2.5:7b,apihost设置成ollama运行地址,
-默认是: "http://localhost:11434/",apikey可随意配置,默认sk-xx,发起请求时，后台会自动解析并且请求
+默认是: "localhost:11434",apikey可随意配置,默认sk-xx,发起请求时，后台会自动解析并且请求
 ollama中的qwen2.5:7b模型。
 
 :::

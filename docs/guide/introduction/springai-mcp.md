@@ -10,14 +10,7 @@
 ## 
 # MCP中文简介
 
-# 介绍
-
 MCP (Model Context Protocol) 是一个开放协议，用于标准化应用程序如何向 LLM 提供上下文。可以将 MCP 想象成 AI 应用程序的 USB-C 接口。就像 USB-C 为设备连接各种外设和配件提供标准化方式一样，MCP 为 AI 模型连接不同的数据源和工具提供了标准化的方式。
-
-
-
-# 快速入门
-
 
 
 # 服务器开发
@@ -105,9 +98,8 @@ MCP (Model Context Protocol) 是一个开放协议，用于标准化应用程序
 
 参考文档：
 
-springai-mcp中文文档
+- springai-mcp中文文档
 https://springdoc.tech/spring-ai/
 
-mcp中文文档
-
+- mcp中文文档
 https://mcpcn.com/docs/examples/
