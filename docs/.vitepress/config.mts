@@ -20,6 +20,7 @@ export default defineConfig({
         items: [
           { text: '私有知识库配置', link: '/guide/introduction/knowledge' },
           { text: '接入企业/个人微信', link: '/guide/introduction/weixin' },
+          { text: 'springai-mcp使用教程', link: '/guide/introduction/springai-mcp' },
           // { text: '安装文档', link: '/guide/introduction/index' },
           // { text: '部署文档', link: '/guide/introduction/deploy' },
           // { text: 'deepseek微调', link: '/guide/introduction/finetuning' },
