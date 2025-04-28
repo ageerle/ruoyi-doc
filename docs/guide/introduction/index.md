@@ -1,9 +1,9 @@
 # 关于 RuoYi AI
 
-::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai) `2.0`版本的文档！
+::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
 
 - 如发现文档有误，欢迎提交 [issue](https://gitee.com/ageerle/ruoyi-ai/issues) 帮助我们改进。
-- 如果你只是想体验一下，你可以查看[快速开始](/guide/introduction/roadmap)。
+
 
 :::
 
@@ -16,8 +16,7 @@
 
 ## 安装后端
 1. 下载项目
-- **GiHub地址**：https://github.com/ageerle/ruoyi-ai
-- **Gitee地址**：https://gitee.com/ageerle/ruoyi-ai
+- https://gitee.com/ageerle/ruoyi-ai
 
 2. idea 导入项目
 ![01](/guide/image/01.png)
@@ -62,7 +61,7 @@ xml配置
 ![03](/guide/image/03.png)
 ![04](/guide/image/04.png)
 5. 启动redis
-下载地址：https://github.com/tporadowski/redis/releases
+- 下载地址：https://github.com/tporadowski/redis/releases
 ![06](/guide/image/06.png)
 6. 启动项目
 ![05](/guide/image/05.png)
@@ -70,8 +69,7 @@ xml配置
 ## 安装管理端
 
 1. 下载项目
-- **GiHub地址**：https://github.com/ageerle/ruoyi-admin
-- **Gitee地址**：https://gitee.com/ageerle/ruoyi-admin
+- https://gitee.com/ageerle/ruoyi-admin
 2. 安装依赖
 ```javascript
 pnpm install
@@ -91,19 +89,18 @@ pnpm build
 
 ## 安装用户端
 1. 下载项目
-- **GiHub地址**：https://github.com/ageerle/ruoyi-web
-- **Gitee地址**：https://gitee.com/ageerle/ruoyi-web
+- https://gitee.com/ageerle/ruoyi-web
 2. 安装依赖
 ```javascript
-pnpm install
+npm install
 ```
 3. 运行项目
 ```javascript
-pnpm dev
+npm run dev
 ```
 4. 打包
 ```javascript
-pnpm build
+npm run build
 ```
 
 ## 修改配置

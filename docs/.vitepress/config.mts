@@ -18,15 +18,13 @@ export default defineConfig({
       {
         text: '项目文档',
         items: [
+          { text: '安装文档', link: '/guide/introduction/index' },
           { text: '私有知识库配置', link: '/guide/introduction/knowledge' },
+          { text: '如何使用MCP', link: '/guide/introduction/mcp' },
+          { text: '模型集成', link: '/guide/introduction/model' },
           { text: '接入企业/个人微信', link: '/guide/introduction/weixin' },
           { text: 'springai-mcp使用教程', link: '/guide/introduction/springai-mcp' },
-          // { text: '安装文档', link: '/guide/introduction/index' },
-          // { text: '部署文档', link: '/guide/introduction/deploy' },
-          // { text: 'deepseek微调', link: '/guide/introduction/finetuning' },
-          // { text: 'ollama调用本地模型', link: '/guide/introduction/roadmap' },
-          // { text: '微信/易支付/Stripe配置', link: '/guide/introduction/roadmap' },
-          // { text: 'AI翻唱/语音克隆/AIPPT配置', link: '/guide/introduction/roadmap' },
+          { text: '支付配置', link: '/guide/introduction/pay' },
         ]
       }
     ],
