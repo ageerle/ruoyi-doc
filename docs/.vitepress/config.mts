@@ -23,7 +23,6 @@ export default defineConfig({
           { text: '如何使用MCP', link: '/guide/introduction/mcp' },
           { text: '模型集成', link: '/guide/introduction/model' },
           { text: '接入企业/个人微信', link: '/guide/introduction/weixin' },
-          { text: 'springai-mcp使用教程', link: '/guide/introduction/springai-mcp' },
           { text: '支付配置', link: '/guide/introduction/pay' },
         ]
       }
