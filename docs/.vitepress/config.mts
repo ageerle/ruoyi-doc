@@ -24,6 +24,7 @@ export default defineConfig({
           { text: '模型集成', link: '/guide/introduction/model' },
           { text: '接入企业/个人微信', link: '/guide/introduction/weixin' },
           { text: '支付配置', link: '/guide/introduction/pay' },
+          { text: '接口文档', link: '/guide/introduction/doc' },
         ]
       }
     ],
