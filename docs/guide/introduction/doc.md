@@ -10,14 +10,14 @@
 ## 接口文档使用说明
 
 ### 项目使用spring doc管理接口
-- 项目启动后可以访问http://localhost:6039/v3/api-docs查看接口信息
+- 项目启动后可以访问localhost:6039/v3/api-docs查看接口信息
 - 由于没有引用starter-webmvc-ui,所以看到的是一串json数据。
 
 ### 使用Apifox管理接口
 1. 打开Apifox 新建一个项目
 ![doc-01](/guide/image/doc-01.png)
 
-2. 项目设置 - 导入数据 - URL方式导入 输入http://localhost:6039/v3/api-docs
+2. 项目设置 - 导入数据 - URL方式导入 输入localhost:6039/v3/api-docs
 ![doc-02](/guide/image/doc-02.png)
 
 3. 确认导入

@@ -103,16 +103,6 @@ npm run dev
 npm run build
 ```
 
-## 修改配置
-1. 申请API KEY: https://api.pandarobot.chat
-- 注册API KEY
-成功注册账号后点击添加令牌,参数可以全部默认,然后点击复制按钮可以获取API KEY
-![08](/guide/image/08.png)
-2. 进入后台管理配置
-- 默认账号 admin/admin123
-3. 进入运营管理-系统模型-新增模型,在请求密钥处填写上一步申请到的key信息,请求地址默认：https://api.pandarobot.chat/
-![09](/guide/image/09.png)
-
 ## nginx 部署
 部署到 nginx后，可能会出现以下错误：
 ```
@@ -129,8 +119,6 @@ http {
     }
 }
 ```
-解决方式二：
-进入 nginx 下的mime.types文件, 将application/javascript js; 修改为 application/javascript js mjs;
 
 ## vscode 插件推荐
 | 插件名 | 功能描述 |
