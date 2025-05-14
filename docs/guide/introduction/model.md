@@ -7,8 +7,8 @@
 
 :::
 
-## 接入派欧算力云
-1. 访问派欧算力云官网
+## 接入PPIO派欧云
+1. 访问PPIO派欧云官网
 ```
 https://ppio.cn/user/register?from=ppinfra&invited_by=P8QTUY&utm_source=github_ruoyi-ai
 
