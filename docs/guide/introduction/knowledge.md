@@ -17,7 +17,6 @@ docker-compose up -d
 docker-compose.yml
 ```
 ---
-version: '3.4'
 services:
 weaviate:
 command:
@@ -27,7 +26,7 @@ command:
 - '6038'
 - --scheme
 - http
-image: cr.weaviate.io/semitechnologies/weaviate:1.19.7
+image: semitechnologies/weaviate:1.19.7
 ports:
 - 6038:6038
 - 50051:50051
@@ -48,37 +47,6 @@ weaviate_data:
 可以执行docker images检查是否成功安装
 ![20](/guide/image/20.png)
 
-### 部署在内网环境
-
-1. 查看镜像 
-```
-docker images 
-```
-![21](/guide/image/21.png)
-
-2. 打包镜像
-```
-docker commit 409bf38508b4 weaviate:v1.0
-```
-
-3. 加载镜像
-
-```
- docker load -i weaviate_1.tar
- 
-```
-
-4. 运行镜像
- 
-```
-docker run -d weaviate:v1.0
- 
-```
-
-5. weaviate向量数据库教学视频
-```
-https://www.bilibili.com/video/BV1LhUAYFEku/?vd_source=5d732753a680ea07011f9d1f6094444e
-```
 
 ### 安装ollama
 

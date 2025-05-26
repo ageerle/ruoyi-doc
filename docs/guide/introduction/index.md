@@ -8,15 +8,23 @@
 :::
 
 ## 项目环境
-- jdk 17
-- mysql 5.7、8.0
-- redis 版本必须 >= 5.X
-- maven 3.8+
-- nodejs 20+ & pnpm
+| 序号 | 软件名称            | 版本/备注                                | 下载地址                                                                                     |
+|------|---------------------|-----------------------------------------|----------------------------------------------------------------------------------------------|
+| 1    | IntelliJ IDEA       | 社区版/旗舰版                           | [官网下载](https://www.jetbrains.com/idea/)                                                  |
+| 2    | VS Code             | 最新稳定版                              | [官网下载](https://code.visualstudio.com/)                                                   |
+| 3    | Navicat             | MySQL 版                                | [中文下载](https://www.navicat.com.cn/download/navicat-for-mysql)                           |
+| 4    | Git                 | Windows 客户端                          | [中文下载站](https://git-scm.cn/downloads)                                                   |
+| 5    | JDK                 | 17 (OpenJDK)                            | [清华镜像](https://mirrors.tuna.tsinghua.edu.cn/Adoptium/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz) |
+| 6    | MySQL               | 5.7 (Windows Installer)                 | [官网下载](https://dev.mysql.com/downloads/windows/installer/5.7.html)                      |
+| 7    | Node.js             | 20.18.0 (LTS)                           | [中文下载](https://nodejs.cn/en/download)                                                    |
+| 8    | Redis               | 5.0.7 (Windows 移植版)                  | [GitHub Releases](https://github.com/redis-windows/redis-windows/releases?page=4)           |
+| 9    | Apache Maven        | 3.9.9                                   | [中文镜像站](https://maven.org.cn/download.html)                                             |
 
 ## 安装后端
 1. 下载项目
-- https://gitee.com/ageerle/ruoyi-ai
+```
+git clone https://gitee.com/ageerle/ruoyi-ai
+```
 
 2. idea 导入项目
 ![01](/guide/image/01.png)
@@ -69,18 +77,20 @@ xml配置
 ## 安装管理端
 
 1. 下载项目
-- https://gitee.com/ageerle/ruoyi-admin
+ ```
+ git clone https://gitee.com/ageerle/ruoyi-admin
+```
 2. 安装依赖
 ```javascript
 pnpm install
 ```
 3. 运行项目
 ```javascript
-pnpm dev
+pnpm run dev:antd
 ```
 4. 打包
 ```javascript
-pnpm build
+ pnpm run build:antd
 ```
 5. 修改配置项
 - 后台接口：/apps/web-antd/vite.config.mts
@@ -89,7 +99,9 @@ pnpm build
 
 ## 安装用户端
 1. 下载项目
-- https://gitee.com/ageerle/ruoyi-web
+```
+git clone https://gitee.com/ageerle/ruoyi-web
+```
 2. 安装依赖
 ```javascript
 npm install

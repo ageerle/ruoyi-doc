@@ -1,36 +1,14 @@
----
-outline: deep
----
+# 关于 RuoYi AI
 
-# 快速开始 {#quick-start}
+::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
 
-## 使用说明
-
-1. 个人微信使用网页协议,有封号风险,不要使用大号尝试。
-2. 使用注册满一年以上的小号，可以降低风控
-3. 企业机器人放心使用不会封号
-
-### 如何使用个人微信
-
-1. 添加应用
-
-```
-INSERT INTO `ry-vue`.`chat_app_store` (`id`, `name`, `description`, `avatar`, `app_url`, `create_dept`, `create_by`, `create_time`, `update_by`, `update_time`, `remark`) VALUES (7, '微信机器人', '微信机器人', 'https://panda-1253683406.cos.ap-guangzhou.myqcloud.com/panda/2025/04/02/0557a7d68fa842bba952ce0d6ef38a2e.png', '/wxbot', NULL, NULL, NULL, NULL, NULL, NULL);
-
-```
-
-2. 扫描登录
-![14](/guide/image/14.png)
-
-3. 后台生成二维码接口地址
-
-```
-http://localhost:6039/getQr
-
-```
+- 如发现文档有误，欢迎提交 [issue](https://gitee.com/ageerle/ruoyi-ai/issues) 帮助我们改进。
 
 
-### 如何使用企业微信
+:::
+
+
+## 如何使用企业微信
 
 #### 创建企微应用
 首先在 企业微信管理后台，点击 "应用管理" 菜单，点击创建应用:
