@@ -26,6 +26,7 @@ export default defineConfig({
           { text: '接入企业微信', link: '/guide/introduction/weixin' },
           { text: '支付配置', link: '/guide/introduction/pay' },
           { text: '接口文档', link: '/guide/introduction/doc' },
+          { text: '项目扩展', link: '/guide/introduction/expansion' },
         ]
       }
     ],
