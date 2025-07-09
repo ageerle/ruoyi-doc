@@ -1,6 +1,10 @@
 
+# MCP协议
+::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
 
-# 如何使用MCP
+- 如发现文档有误，欢迎提交 [issue](https://gitee.com/ageerle/ruoyi-ai/issues) 帮助我们改进。
+
+:::
 
 ## 开启mcp客户端
 application.yml中mcp.client.enabled改为true
@@ -203,9 +207,6 @@ MCP (Model Context Protocol) 是一个开放协议，用于标准化应用程序
 | `connections.[name].command` | 为 MCP 服务器执行的命令                | -      |
 | `connections.[name].args`    | 命令参数列表                           | -      |
 | `connections.[name].env`     | 服务器进程的环境变量映射               | -      |
-
-## 功能演示
-![26](/guide/image/26.png)
 
 
 参考文档：

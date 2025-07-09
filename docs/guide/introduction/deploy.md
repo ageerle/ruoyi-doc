@@ -1,4 +1,4 @@
-# 关于 RuoYi AI
+# 宝塔部署
 
 ::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
 
@@ -9,34 +9,34 @@
 
 ## 部署后端项目
 1. 使用idea的maven工具，把项目打成jar包
-![alt text](image-10.png)
+![alt text](/images/baota/bt-01.png)
 
 2. 创建目录并且上传.jar文件
 
-![alt text](image-11.png)
+![alt text](/images/baota/bt-02.png)
 
 3. 添加java项目
 
-![alt text](image-12.png)
+![alt text](/images/baota/bt-03.png)
 
 4. 启动项目
 
-![alt text](image-13.png)
+![alt text](/images/baota/bt-04.png)
 
 
 
 ## 部署后台管理项目
 1. 执行打包命令： pnpm run build:antd
 
-![alt text](image-14.png)
+![alt text](/images/baota/bt-05.png)
 
 2. 将dict文件上传至服务器
 
-![alt text](image-15.png)
+![alt text](/images/baota/bt-06.png)
 
 3. 添加站点
 
-![alt text](image-16.png)
+![alt text](/images/baota/bt-07.png)
 
 4. 配置nginx
 
@@ -65,13 +65,13 @@
 ## 部署用户端项目
 1. 执行打包命令：npm run build
 
-![alt text](image-17.png)
+![alt text](/images/baota/bt-08.png)
 
 2. 将dict文件上传至服务器
-![alt text](image-18.png)
+![alt text](/images/baota/bt-09.png)
 
 3. 添加站点
-![alt text](image-19.png)
+![alt text](/images/baota/bt-10.png)
 
 4. 配置nginx
 
@@ -88,56 +88,57 @@
 ```
 
 ## 配置安全规则
-![alt text](image-20.png)
+![alt text](/images/baota/bt-11.png)
 
 ## 腾讯云oss配置
 1. 控制台-对象存储-创建存储桶
-![alt text](image-21.png)
+![alt text](/images/baota/bt-12.png)
 
 2. 配置存储桶信息
 
-![alt text](image-22.png)
+![alt text](/images/baota/bt-13.png)
 
-![alt text](image-23.png)
+![alt text](/images/baota/bt-14.png)
 
-![alt text](image-24.png)
+![alt text](/images/baota/bt-15.png)
 3. 获取API管密钥
 
-![alt text](image-25.png)
+![alt text](/images/baota/bt-16.png)
 
 4. 后台管理配置密钥信息
 
-![alt text](image-26.png)
+![alt text](/images/baota/bt-17.png)
 5. 启用配置
 
-![alt text](image-27.png)
+![alt text](/images/baota/bt-18.png)
 
 6. 上传文件验证是否配置成功
 
-![alt text](image-28.png)
+![alt text](/images/baota/bt-19.png)
 
 ## 邮箱配置
 1. <font style="color:rgb(37, 41, 51);">申请邮箱授权码（使用163邮箱）</font>
 
-![alt text](image-29.png)
+![alt text](/images/baota/bt-20.png)
 
 2. <font style="color:rgb(37, 41, 51);">点击开启POP3/SMTP服务，扫码发送短信，记住授权码。</font>
 
-![alt text](image-30.png)
+![alt text](/images/baota/bt-21.png)
 
 3. 配置邮箱信息
 
-![alt text](image-31.png)
+![alt text](/images/baota/bt-22.png)
 
 ## 安装向量库(weaviate)
 1. 将script/docker/weaviate 目录下的yml文件上传至服务器
 
-![alt text](image-32.png)
+![alt text](/images/baota/bt-23.png)
 
 2. 同级目录下执行<font style="color:rgb(64, 72, 91);">docker-compose up -d </font>
 3. <font style="color:rgb(64, 72, 91);">如果出现连接超时可以配置代理</font>
 
-![alt text](image-33.png)
+![alt text](/images/baota/bt-24.png)
+
 
 
 

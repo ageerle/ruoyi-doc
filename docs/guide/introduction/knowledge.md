@@ -2,7 +2,13 @@
 outline: deep
 ---
 
-# 部署本地知识库 {#quick-start}
+# 本地知识库
+
+::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
+
+- 如发现文档有误，欢迎提交 [issue](https://gitee.com/ageerle/ruoyi-ai/issues) 帮助我们改进。
+
+:::
 
 ## 环境准备
 1. 安装weaviate向量库
@@ -45,7 +51,7 @@ weaviate_data:
 ...
 ```
 可以执行docker images检查是否成功安装
-![20](/guide/image/20.png)
+![alt text](/images/knowledge/kn-00.png)
 
 
 ### 安装ollama
@@ -84,11 +90,11 @@ ollama pull quentinz/bge-large-zh-v1.5
 ```
 
 2. 检测环境
-![22](/guide/image/22.png)
+![alt text](/images/knowledge/kn-01.png)
 
 ### 创建知识库
 应用中心-知识库-立即体验
-![23](/guide/image/23.png)
+![alt text](/images/knowledge/kn-02.png)
 
 关键参数说明
 - 分隔符：知识块分割规则,默认根据设置中的文本块大小进行分类，如果设置了分割符,则分割符包裹的文本会被单独分为一块
@@ -101,8 +107,8 @@ ollama pull quentinz/bge-large-zh-v1.5
 也可以使用本地模型bge-large-zh-v1.5,对电脑内存要求较高,推荐使用text-embedding-3-small。
 
 ### 知识库提问
-![24](/guide/image/24.png)
-![25](/guide/image/25.png)
+![alt text](/images/knowledge/kn-03.png)
+![alt text](/images/knowledge/kn-04.png)
 
 ::: info 配置本地模型
 

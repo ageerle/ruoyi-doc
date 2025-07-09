@@ -1,4 +1,4 @@
-# 关于 RuoYi AI
+# 接口文档
 
 ::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
 
@@ -15,13 +15,13 @@
 
 ### 使用Apifox管理接口
 1. 打开Apifox 新建一个项目
-![doc-01](/guide/image/doc-01.png)
+![doc-01](/images/doc/doc-01.png)
 
 2. 项目设置 - 导入数据 - URL方式导入 输入localhost:6039/v3/api-docs
-![doc-02](/guide/image/doc-02.png)
+![doc-02](/images/doc/doc-02.png)
 
 3. 确认导入
-![doc-03](/guide/image/doc-03.png)
+![doc-03](/images/doc/doc-03.png)
 
 4. 查看接口信息
-![doc-04](/guide/image/doc-04.png)
+![doc-04](/images/doc/doc-04.png)
