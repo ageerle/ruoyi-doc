@@ -8,6 +8,11 @@ export default defineConfig({
     ['link', { rel: 'icon', href: '/favicon.ico' }],
     ['meta', { name: 'theme-color', content: '#3c8772' }]
   ],
+  ignoreDeadLinks: [
+    // 忽略本地开发环境的链接
+    'http://localhost:5666/operate/model',
+    'http://localhost:1002'
+  ],
   themeConfig: {
     logo: '/logo.png',
     // https://vitepress.dev/reference/default-theme-config
