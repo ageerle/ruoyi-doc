@@ -269,7 +269,37 @@ const teamMembers: Contributor[] = [
   github: 'https://github.com/Code-Mr-Jiu',
   wechat: 'zimu578665',
   website: ''
-  },  
+  },
+  {
+    id: '9',
+    name: '瓢六六',
+    role: 'Backend Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/19771955?s=96&v=4',
+    bio: '负责后端服务开发，专精于微服务架构和数据库优化。',
+    github: 'https://github.com/liudalian',
+    wechat: 'LGF188888888888',
+    website: 'https://blog.csdn.net/qq616138361?type=blog'
+  },
+  {
+    id: '10',
+    name: 'Jason',
+    role: 'Fullstack Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/29836675?v=4',
+    bio: '致力于全栈开发，专注技术创新与高效实践',
+    github: 'https://github.com/xingjisen',
+    wechat: 'JasonXing0806',
+    "website": ""
+  },
+  {
+    id: '11',
+    name: 'Alan',
+    role: 'Cloud Native Architect',
+    avatar: 'https://avatars.githubusercontent.com/u/3273357?v=4',
+    bio: '专精于云原生架构与平台部署优化。',
+    github: 'https://github.com/alanpeng',
+    wechat: 'BuddhistPath',
+    website: ''
+  },
 ]
 
 const showTooltip = (event: MouseEvent, contributor: Contributor) => {
