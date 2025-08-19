@@ -49,6 +49,15 @@ export default defineConfig({
             { text: '接口文档', link: '/guide/introduction/doc' },
             { text: '企微集成', link: '/guide/introduction/weixin' },
           ]
+        },
+        {
+          text: '更新日志',
+          items: [
+            { text: '2025-08', link: '/guide/introduction/202508_changeLog' },
+            { text: '2025-07', link: '/guide/introduction/202507_changeLog' },
+            { text: '2025-06', link: '/guide/introduction/202506_changeLog' },
+            { text: '2025-05', link: '/guide/introduction/202505_changeLog' },
+          ]
         }
       ]
     },
