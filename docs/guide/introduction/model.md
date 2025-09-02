@@ -26,15 +26,5 @@ https://ppio.cn/user/register?from=ppinfra&invited_by=P8QTUY&utm_source=github_r
 4. 效果展示
 ![alt text](/images/model/mode-04.png)
 
-## 接入百搭API
-1. 申请API KEY
-```
- https://api.pandarobot.chat
-```
-2. 注册账号后点击添加令牌,参数**全部默认**,然后点击复制按钮可以获取API KEY
-![alt text](/images/model/mode-05.png)
-
-3. 运营管理-系统模型-新增模型,在请求密钥处填写上一步申请到的key信息
-   ![alt text](/images/model/mode-06.png)
 
 
