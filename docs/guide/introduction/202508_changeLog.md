@@ -20,7 +20,8 @@
 - 【新增】替换代码生成模块，由@evo贡献 [#151](https://github.com/ageerle/ruoyi-ai/pull/#151)
 - 【优化】优化代码生成模块前端文件UI及接口，由@violateer贡献 [#162](https://github.com/ageerle/ruoyi-ai/pull/162)
 - 【新增】用户知识库角色配置，由@violateer贡献 [#143](https://github.com/ageerle/ruoyi-ai/pull/143)
-
+- 【修改】将计费代理与聊天进行解耦，由@batter贡献 [#167](https://github.com/ageerle/ruoyi-ai/pull/167)
+- 【新增】重构计费逻辑，由@batter贡献[#187](https://github.com/ageerle/ruoyi-ai/pull/187) [#188](https://github.com/ageerle/ruoyi-ai/pull/188)
 ---
 ## 🐞 Bug Fixes
 
