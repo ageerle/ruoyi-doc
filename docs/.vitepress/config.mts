@@ -40,7 +40,7 @@ export default defineConfig({
             { text: '模型集成', link: '/guide/introduction/model' },
             { text: 'Dify集成', link: '/guide/introduction/dify' },
             { text: 'Coze集成', link: '/guide/introduction/coze' },
-            { text: 'FastGPT集成', link: '/guide/introduction/fastgpt' }
+            { text: 'AI数字人集成', link: '/guide/introduction/aihuman' }
           ]
         },
         {

@@ -300,6 +300,16 @@ const teamMembers: Contributor[] = [
     wechat: 'BuddhistPath',
     website: ''
   },
+  {
+    id: '12',
+    name: 'Maxchen',
+    role: 'Fullstack Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/20981349?s=400&u=eb6910b7f1492cb64c406fabc82356a7c0a597b1&v=4',
+    bio: '致力于数字人开发，为大家带来生动活泼有趣的体验',
+    github: 'https://github.com/seven-ocean',
+    wechat: 'Qing_Yun_AI',
+    website: 'https://blog.laochen.online'
+  },
 ]
 
 const showTooltip = (event: MouseEvent, contributor: Contributor) => {

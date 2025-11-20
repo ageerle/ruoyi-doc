@@ -57,6 +57,12 @@ features:
     link: /guide/introduction/fastgpt
     linkText: FastGPT集成
 
+  - icon:  🧑‍💼
+    title: AI数字人集成
+    details: 兼容Live2D，GPT-SoVITS，火山引擎等，实现数字人对口型，语音交互。
+    link: /guide/introduction/aihuman
+    linkText: AI数字人集成
+
 ---
 
 <VbenContributors />
