@@ -107,6 +107,26 @@
           </div>
         </div>
       </div>
+
+      <!-- 其他贡献者 - 只显示头像 -->
+      <div class="contributor-group">
+        <h3 class="group-title">
+          <span class="group-icon">💫</span>
+          贡献者
+        </h3>
+        <div class="other-contributors-grid">
+          <div
+            v-for="other in otherContributors"
+            :key="other.id"
+            class="other-contributor-item"
+            @mouseenter="(e) => showTooltip(e, other)"
+            @mouseleave="hideTooltip"
+            :title="other.name"
+          >
+            <img :src="other.avatar" :alt="other.name" class="other-contributor-avatar" />
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 悬浮卡片 -->
@@ -191,7 +211,7 @@ const coreContributors: Contributor[] = [
     name: 'ageerle',
     role: '项目创始人',
     avatar: 'https://avatars.githubusercontent.com/u/32251822?s=96&v=4',
-    bio: 'RuoYi AI 项目的创始人和主要维护者，专注于AI技术与企业级应用的结合。',
+    bio: 'RuoYi AI 项目的创始人和主要维护者,专注于AI技术与企业级应用的结合。',
     github: 'https://github.com/ageerle',
     wechat: 'w193960194',
     website: 'https://blog.csdn.net/weixin_42416319'
@@ -201,7 +221,7 @@ const coreContributors: Contributor[] = [
     name: '林大侠',
     role: '项目合伙人',
     avatar: 'https://avatars.githubusercontent.com/u/147299771?v=4',
-    bio: '负责相关产品的战略设计和运营，参与项目的设计、开发。',
+    bio: '负责相关产品的战略设计和运营,参与项目的设计、开发。',
     github: 'https://github.com/lindaxiaproject',
     wechat: 'lindaxia-2019',
     website: 'https://blog.csdn.net/LINHONG_1994'
@@ -211,7 +231,7 @@ const coreContributors: Contributor[] = [
     name: 'evo',
     role: 'Backend Developer',
     avatar: 'https://avatars.githubusercontent.com/u/59215838?s=96&v=4',
-    bio: '负责后端服务开发，主要负责模型管理模块',
+    bio: '负责后端服务开发,主要负责模型管理模块',
     github: 'https://github.com/MuSan-Li',
     wechat: 'Exotisch',
     website: 'http://exotisch.cn/'
@@ -222,16 +242,60 @@ const coreContributors: Contributor[] = [
 const teamMembers: Contributor[] = [
   {
     id: '4',
+    name: '龙猫',
+    role: 'Full Stack Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/169354264?v=4',
+    bio: '负责前后端服务开发，主要负责工作流编排模块开发',
+    github: 'https://github.com/LM20230311/LM20230311',
+    wechat: 'LikW-041006',
+    website: 'https://blog.csdn.net/muzi_longren'
+  },
+  {
+    id: '5',
+    name: '颜AI',
+    role: 'AI Backend Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/86051851?s=400&u=ecaf566ff91277d25a87de88b0b4b4b39ec508cd&v=4',
+    bio: '负责AI后端服务开发,整合第三方AI服务应用',
+    github: 'https://github.com/Cyclones-Y',
+    wechat: 'ya10405',
+    website: 'https://juejin.cn/user/1612303520767028'
+  },
+  {
+    id: '6',
+    name: 'better',
+    role: 'Fullstack Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/37090582?v=4',
+    bio: '负责全栈开发,专注技术创新与高效实践',
+    github: 'https://github.com/xiaonieli7',
+    wechat: 'L0724YYN',
+    website: ''
+  },
+  {
+    id: '7',
+    name: 'Maxchen',
+    role: 'AiHuman Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/20981349?v=4',
+    bio: '致力于数字人开发,为大家带来生动活泼有趣的体验',
+    github: 'https://github.com/seven-ocean',
+    wechat: 'Qing_Yun_AI',
+    website: ''
+  }
+]
+
+// 其他贡献者数据(只显示头像)
+const otherContributors: Contributor[] = [
+  {
+    id: '8',
     name: 'Albert Z',
     role: 'Backend Developer && Fullstacks',
     avatar: 'https://avatars.githubusercontent.com/u/6056349?v=4',
-    bio: '负责后端服务开发，专精于业务功能设计、微服务架构、应用服务部署、熟悉使用aliyun，腾讯云',
+    bio: '负责后端服务开发,专精于业务功能设计、微服务架构、应用服务部署、熟悉使用aliyun,腾讯云',
     github: 'https://github.com/janzhou123',
     wechat: 'ZHOUWY123',
     website: 'https://zhouxiaoxiao.cn'
   },
   {
-    id: '5',
+    id: '9',
     name: '請發財💰',
     role: 'Backend Developer',
     avatar: 'https://avatars.githubusercontent.com/u/51768077?s=400&u=f0943b9b353585ee59badce9bfa35fe895d9b47e&v=4',
@@ -241,57 +305,47 @@ const teamMembers: Contributor[] = [
     website: 'https://blog.csdn.net/weixin_44550842?spm=1000.2115.3001.10640'
   },
   {
-    id: '6',
-    name: '颜AI',
-    role: 'AI Backend Developer',
-    avatar: 'https://avatars.githubusercontent.com/u/86051851?s=400&u=ecaf566ff91277d25a87de88b0b4b4b39ec508cd&v=4',
-    bio: '负责AI后端服务开发，整合第三方AI服务应用',
-    github: 'https://github.com/Cyclones-Y',
-    wechat: 'ya10405',
-    website: 'https://juejin.cn/user/1612303520767028'
-  },
-  {
-    id: '7',
+    id: '10',
     name: 'WCS视频平台',
     role: 'Backend Developer',
     avatar: 'https://avatars.githubusercontent.com/u/53170533?v=4&size=64',
-    bio: '负责后端服务开发，研发WCS视频平台。',
+    bio: '负责后端服务开发,研发WCS视频平台。',
     github: 'https://github.com/WWTBNBWN',
     wechat: 'WYWZC888666',
     website: 'https://wzciot.site/'
   },
   {
-  id: '8',
-  name: '酒亦',
-  role: 'Backend Developer',
-  avatar: 'https://avatars.githubusercontent.com/u/68746373?s=400&u=6de3b3d1748ab8661afc59167b9ff258c31d973a&v=4',
-  bio: '负责后端服务开发，热爱技术',
-  github: 'https://github.com/Code-Mr-Jiu',
-  wechat: 'zimu578665',
-  website: ''
+    id: '11',
+    name: '酒亦',
+    role: 'Backend Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/68746373?s=400&u=6de3b3d1748ab8661afc59167b9ff258c31d973a&v=4',
+    bio: '负责后端服务开发,热爱技术',
+    github: 'https://github.com/Code-Mr-Jiu',
+    wechat: 'zimu578665',
+    website: ''
   },
   {
-    id: '9',
+    id: '12',
     name: '瓢六六',
     role: 'Backend Developer',
     avatar: 'https://avatars.githubusercontent.com/u/19771955?s=96&v=4',
-    bio: '负责后端服务开发，专精于微服务架构和数据库优化。',
+    bio: '负责后端服务开发,专精于微服务架构和数据库优化。',
     github: 'https://github.com/liudalian',
     wechat: 'LGF188888888888',
     website: 'https://blog.csdn.net/qq616138361?type=blog'
   },
   {
-    id: '10',
+    id: '13',
     name: 'Jason',
     role: 'Fullstack Developer',
     avatar: 'https://avatars.githubusercontent.com/u/29836675?v=4',
-    bio: '致力于全栈开发，专注技术创新与高效实践',
+    bio: '致力于全栈开发,专注技术创新与高效实践',
     github: 'https://github.com/xingjisen',
     wechat: 'JasonXing0806',
-    "website": ""
+    website: ''
   },
   {
-    id: '11',
+    id: '14',
     name: 'Alan',
     role: 'Cloud Native Architect',
     avatar: 'https://avatars.githubusercontent.com/u/3273357?v=4',
@@ -299,23 +353,13 @@ const teamMembers: Contributor[] = [
     github: 'https://github.com/alanpeng',
     wechat: 'BuddhistPath',
     website: ''
-  },
-  {
-    id: '12',
-    name: 'Maxchen',
-    role: 'Fullstack Developer',
-    avatar: 'https://avatars.githubusercontent.com/u/20981349?s=400&u=eb6910b7f1492cb64c406fabc82356a7c0a597b1&v=4',
-    bio: '致力于数字人开发，为大家带来生动活泼有趣的体验',
-    github: 'https://github.com/seven-ocean',
-    wechat: 'Qing_Yun_AI',
-    website: 'https://blog.laochen.online'
-  },
+  }
 ]
 
 const showTooltip = (event: MouseEvent, contributor: Contributor) => {
   currentContributor.value = contributor
 
-  // 计算tooltip位置，确保不会超出视窗
+  // 计算tooltip位置,确保不会超出视窗
   const tooltipWidth = 320 // tooltip最大宽度
   const tooltipHeight = 200 // 估算tooltip高度
   const margin = 15
@@ -355,17 +399,12 @@ const hideTooltip = () => {
   padding: 2rem 0;
 }
 
-
-
 /* 贡献者容器 */
 .contributors-container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
 }
-
-
-
 
 /* 贡献者组 */
 .contributor-group {
@@ -415,7 +454,7 @@ const hideTooltip = () => {
   }
 }
 
-/* 团队成员网格 - 最多4列，更紧凑 */
+/* 团队成员网格 - 最多4列,更紧凑 */
 .team-members-grid {
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 1.25rem;
@@ -461,8 +500,6 @@ const hideTooltip = () => {
   font-size: 0.8rem;
 }
 
-
-
 @media (min-width: 1200px) {
   .team-members-grid {
     grid-template-columns: repeat(4, 1fr);
@@ -485,6 +522,40 @@ const hideTooltip = () => {
   .team-members-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* 其他贡献者网格 - 只显示头像 */
+.other-contributors-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.other-contributor-item {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.other-contributor-item:hover {
+  transform: translateY(-4px) scale(1.1);
+}
+
+.other-contributor-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--vp-c-brand);
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.other-contributor-item:hover .other-contributor-avatar {
+  border-width: 3px;
+  box-shadow: 0 4px 12px rgba(var(--vp-c-brand-rgb, 99, 102, 241), 0.4);
 }
 
 /* 贡献者卡片 */
@@ -767,6 +838,11 @@ const hideTooltip = () => {
   .contributor-tooltip {
     max-width: 280px;
     padding: 1rem;
+  }
+
+  .other-contributor-avatar {
+    width: 45px;
+    height: 45px;
   }
 }
 </style>

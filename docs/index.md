@@ -19,10 +19,9 @@ hero:
       link: http://web.pandarobot.chat
 
 features:
-
   - icon: 🧩 
     title: 丰富模型
-    details: 内置SSE、websocket等网络协议，支持对接OpenAI、DeepSeek、ChatGLM、讯飞星火等上百个大语言模型，还支持MidJourney、Stable Diffusion等绘画功能。
+    details: 内置SSE、websocket等网络协议，支持对接OpenAI、DeepSeek、ChatGLM、等上百个大语言模型。
     link: /guide/introduction/model
     linkText: 模型集成文档
 
@@ -34,7 +33,7 @@ features:
 
   - icon: 🛠️
     title: MCP协议支持
-    details: 开发者只需按照MCP标准开发一次工具接口，即可被所有支持MCP协议的模型或平台复用。通过MCP协议，AI模型能够轻松接入MCP广场1400+ mcpserver，减少了开发和维护的工作量。
+    details: 开发者只需按照MCP标准开发一次工具接口，即可被所有支持MCP协议的模型或平台复用。
     link: /guide/introduction/mcp
     linkText: MCP协议详解
 
