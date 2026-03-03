@@ -12,11 +12,11 @@
 | 2    | VS Code             | 最新稳定版                              | [官网下载](https://code.visualstudio.com/)                                                   |
 | 3    | Navicat             | MySQL 版                                | [中文下载](https://www.navicat.com.cn/download/navicat-for-mysql)                           |
 | 4    | Git                 | Windows 客户端                          | [中文下载站](https://git-scm.cn/downloads)                                                   |
-| 5    | JDK                 | 17 (OpenJDK)                            | [清华镜像](https://mirrors.tuna.tsinghua.edu.cn/Adoptium/OpenJDK17U-jdk_x64_linux_hotspot_17.0.7_7.tar.gz) |
-| 6    | MySQL               | 5.7 (Windows Installer)                 | [官网下载](https://dev.mysql.com/downloads/windows/installer/5.7.html)                      |
-| 7    | Node.js             | 20.18.0 (LTS)                           | [中文下载](https://nodejs.cn/en/download)                                                    |
-| 8    | Redis               | 5.0.7 (Windows 移植版)                  | [GitHub Releases](https://github.com/redis-windows/redis-windows/releases?page=4)           |
-| 9    | Apache Maven        | 3.9.9                                   | [中文镜像站](https://maven.org.cn/download.html)                                             |
+| 5    | JDK                 | 17 (OpenJDK)                            | [清华镜像](https://mirrors.tuna.tsinghua.edu.cn/Adoptium/17/jdk/x64/windows/) |
+| 6    | MySQL               | 8.0.45 (Windows Installer)                 | [官网下载](https://dev.mysql.com/downloads/windows/installer)                      |
+| 7    | Node.js             | 24.13.0                         | [中文下载](https://nodejs.cn/en/download)                                                    |
+| 8    | Redis               | 8.2.3 (Windows 移植版)                  | [GitHub Releases](https://github.com/redis-windows/redis-windows/releases)           |
+| 9    | Apache Maven        | 3.9.12                                   | [中文镜像站](https://maven.apache.org/download.cgi)                                             |
 
 ## 安装后端
 1. 下载项目
@@ -102,15 +102,15 @@ git clone https://gitee.com/ageerle/ruoyi-web
 ```
 2. 安装依赖
 ```javascript
-npm install
+pnpm install
 ```
 3. 运行项目
 ```javascript
-npm run dev
+pnpm run dev
 ```
 4. 打包
 ```javascript
-npm run build
+pnpm run build
 ```
 
 ## nginx 部署

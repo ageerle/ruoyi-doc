@@ -235,11 +235,7 @@ const coreContributors: Contributor[] = [
     github: 'https://github.com/MuSan-Li',
     wechat: 'Exotisch',
     website: 'http://exotisch.cn/'
-  }
-]
-
-// 团队成员数据
-const teamMembers: Contributor[] = [
+  },
   {
     id: '4',
     name: '龙猫',
@@ -250,15 +246,19 @@ const teamMembers: Contributor[] = [
     wechat: 'LikW-041006',
     website: 'https://blog.csdn.net/muzi_longren'
   },
+]
+
+// 团队成员数据
+const teamMembers: Contributor[] = [
   {
     id: '5',
-    name: '颜AI',
-    role: 'AI Backend Developer',
-    avatar: 'https://avatars.githubusercontent.com/u/86051851?s=400&u=ecaf566ff91277d25a87de88b0b4b4b39ec508cd&v=4',
-    bio: '负责AI后端服务开发,整合第三方AI服务应用',
-    github: 'https://github.com/Cyclones-Y',
-    wechat: 'ya10405',
-    website: 'https://juejin.cn/user/1612303520767028'
+    name: 'Robust_H',
+    role: '后端开发（全栈）',
+    avatar: 'https://avatars.githubusercontent.com/u/77924758?v=4',
+    bio: '负责大模型集成与知识库搭建',
+    github: 'https://github.com/RobustH',
+    wechat: 'Robust_H',
+    website: ''
   },
   {
     id: '6',
@@ -272,14 +272,14 @@ const teamMembers: Contributor[] = [
   },
   {
     id: '7',
-    name: 'Maxchen',
-    role: 'AiHuman Developer',
-    avatar: 'https://avatars.githubusercontent.com/u/20981349?v=4',
-    bio: '致力于数字人开发,为大家带来生动活泼有趣的体验',
-    github: 'https://github.com/seven-ocean',
-    wechat: 'Qing_Yun_AI',
-    website: ''
-  }
+    name: '颜AI',
+    role: 'AI Backend Developer',
+    avatar: 'https://avatars.githubusercontent.com/u/86051851?s=400&u=ecaf566ff91277d25a87de88b0b4b4b39ec508cd&v=4',
+    bio: '负责AI后端服务开发,整合第三方AI服务应用',
+    github: 'https://github.com/Cyclones-Y',
+    wechat: 'ya10405',
+    website: 'https://juejin.cn/user/1612303520767028'
+  },
 ]
 
 // 其他贡献者数据(只显示头像)
@@ -352,6 +352,16 @@ const otherContributors: Contributor[] = [
     bio: '专精于云原生架构与平台部署优化。',
     github: 'https://github.com/alanpeng',
     wechat: 'BuddhistPath',
+    website: ''
+  },
+  {
+    id: '15',
+    name: 'Stageluo',
+    role: '后端开发',
+    avatar: 'https://avatars.githubusercontent.com/u/56993330?v=4',
+    bio: '主要负责Ai智能体工作流相关工作开发。',
+    github: 'https://github.com/stageluo',
+    wechat: 'Stageluo1213',
     website: ''
   }
 ]

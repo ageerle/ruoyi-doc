@@ -19,11 +19,11 @@ hero:
       link: http://web.pandarobot.chat
 
 features:
-  - icon: 🧩 
-    title: 丰富模型
-    details: 内置SSE、websocket等网络协议，支持对接OpenAI、DeepSeek、ChatGLM、等上百个大语言模型。
-    link: /guide/introduction/model
-    linkText: 模型集成文档
+  - icon: 🌐
+    title: 模型与平台集成
+    details: 支持通用模型、Dify、Coze、FastGPT等多种AI平台与工作流的无缝集成。
+    link: /guide/introduction/models-platforms-integration
+    linkText: 集成指南
 
   - icon: 📚
     title: RAG支持
@@ -36,31 +36,6 @@ features:
     details: 开发者只需按照MCP标准开发一次工具接口，即可被所有支持MCP协议的模型或平台复用。
     link: /guide/introduction/mcp
     linkText: MCP协议详解
-
-  
-  - icon: 🎯
-    title: Dify集成
-    details: 完美兼容Dify工作流，支持导入Dify应用配置，无缝迁移现有Dify项目，降低迁移成本。
-    link: /guide/introduction/dify
-    linkText: Dify集成指南
-
-  - icon: 🤖
-    title: Coze集成
-    details: 支持Coze Bot配置导入，兼容Coze工作流格式，让您轻松迁移和管理Coze机器人。
-    link: /guide/introduction/coze
-    linkText: Coze集成文档
-
-  - icon: ⚡
-    title: FastGPT集成
-    details: 支持FastGPT知识库格式，兼容FastGPT应用配置，实现快速迁移和无缝对接。
-    link: /guide/introduction/fastgpt
-    linkText: FastGPT集成
-
-  - icon:  🧑‍💼
-    title: AI数字人集成
-    details: 兼容Live2D，GPT-SoVITS，火山引擎等，实现数字人对口型，语音交互。
-    link: /guide/introduction/aihuman
-    linkText: AI数字人集成
 
 ---
 

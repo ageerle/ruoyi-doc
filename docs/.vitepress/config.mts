@@ -37,10 +37,7 @@ export default defineConfig({
           items: [
             { text: 'MCP协议', link: '/guide/introduction/mcp' },
             { text: '本地知识库', link: '/guide/introduction/knowledge' },
-            { text: '模型集成', link: '/guide/introduction/model' },
-            { text: 'Dify集成', link: '/guide/introduction/dify' },
-            { text: 'Coze集成', link: '/guide/introduction/coze' },
-            { text: 'AI数字人集成', link: '/guide/introduction/aihuman' }
+            { text: '模型与平台集成', link: '/guide/introduction/models-platforms-integration' },
           ]
         },
         {
