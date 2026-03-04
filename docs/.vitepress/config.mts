@@ -41,6 +41,13 @@ export default defineConfig({
           ]
         },
         {
+          text: 'AI编程',
+          items: [
+            { text: 'Claude Code使用教程-入门篇', link: '/guide/introduction/claude-code-beginner' },
+            { text: 'Claude Code使用教程-进阶篇', link: '/guide/introduction/claude-code-advanced' },
+          ]
+        },
+        {
           text: '扩展功能',
           items: [
             { text: '接口文档', link: '/guide/introduction/doc' },

@@ -37,6 +37,12 @@ features:
     link: /guide/introduction/mcp
     linkText: MCP协议详解
 
+  - icon: 💻
+    title: AI编程
+    details: 学习Claude Code使用教程，从入门到精通，掌握AI辅助编程的最佳实践。
+    link: /guide/introduction/claude-code-beginner
+    linkText: 开始学习
+
 ---
 
 <VbenContributors />
