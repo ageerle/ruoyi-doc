@@ -35,9 +35,9 @@ export default defineConfig({
         {
           text: '核心功能',
           items: [
-            { text: 'MCP协议', link: '/guide/introduction/mcp' },
-            { text: '本地知识库', link: '/guide/introduction/knowledge' },
             { text: '模型与平台集成', link: '/guide/introduction/models-platforms-integration' },
+            { text: '使用知识库', link: '/guide/introduction/knowledge' },
+            { text: 'MCP协议', link: '/guide/introduction/mcp' },
           ]
         },
         {
