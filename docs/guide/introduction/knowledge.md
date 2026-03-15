@@ -139,7 +139,10 @@ networks:
 **验证安装：**
 ![Milvus 安装成功](/images/knowledge/kn-07.png)
 
-默认集成了Attu图形化管理工具,访问http://localhost:19500/
+默认集成了Attu图形化管理工具,访问 
+```bash
+http://localhost:19500/
+```
 默认用户名密码: root/Milvus
 ![Attu登录界面](/images/knowledge/kn-08.png)
 访问主页

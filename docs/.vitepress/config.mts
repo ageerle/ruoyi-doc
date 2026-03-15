@@ -11,7 +11,8 @@ export default defineConfig({
   ignoreDeadLinks: [
     // 忽略本地开发环境的链接
     'http://localhost:5666/operate/model',
-    'http://localhost:1002'
+    'http://localhost:1002',
+    'http://localhost:19500'
   ],
   themeConfig: {
     logo: '/logo.png',
