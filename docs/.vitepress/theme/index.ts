@@ -1,5 +1,6 @@
 import DefaultTheme from 'vitepress/theme'
 import VbenContributors from '../components/VbenContributors.vue'
+import './variables.css'
 import './custom.css'
 
 export default {

@@ -1,0 +1,86 @@
+/* ========================================
+   RuoYi AI Design Tokens
+   ======================================== */
+
+:root {
+  /* Brand Green Palette (kept for accent usage only) */
+  --brand-primary: #3c8772;
+  --brand-primary-light: #4a9e87;
+  --brand-primary-lighter: #5cb89e;
+  --brand-primary-lightest: #e8f5f1;
+  --brand-primary-dark: #2d6b5a;
+  --brand-primary-darker: #1f5042;
+  --brand-primary-rgb: 60, 135, 114;
+
+  /* Surface & Border */
+  --brand-surface: #ffffff;
+  --brand-surface-soft: #f6f6f7;
+  --brand-border: #e5e5e5;
+  --brand-border-light: #eeeeee;
+
+  /* Text */
+  --brand-text-primary: #1a1c1e;
+  --brand-text-secondary: #5a5f66;
+  --brand-text-muted: #8b9199;
+
+  /* Interactive (primary button — blue, hover to violet) */
+  --brand-interactive: #3b82f6;
+  --brand-interactive-hover: #7c3aed;
+  --brand-interactive-text: #ffffff;
+
+  /* Secondary button (alt) */
+  --brand-alt-bg: #ffffff;
+  --brand-alt-border: #e5e5e5;
+  --brand-alt-color: #1a1c1e;
+  --brand-alt-hover-bg: #f6f6f7;
+
+  /* Shadows */
+  --brand-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --brand-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --brand-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --brand-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+  /* Border Radius */
+  --brand-radius-sm: 8px;
+  --brand-radius-md: 12px;
+  --brand-radius-lg: 16px;
+  --brand-radius-xl: 24px;
+
+  /* Transitions */
+  --brand-transition-fast: 0.15s ease;
+  --brand-transition-base: 0.3s ease;
+  --brand-transition-slow: 0.5s ease;
+
+  /* Typography */
+  --brand-font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --brand-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code',
+    'Source Code Pro', monospace;
+}
+
+/* Dark Mode Overrides */
+.dark {
+  --brand-surface: #000000;
+  --brand-surface-soft: #18181c;
+  --brand-border: #333333;
+  --brand-border-light: #262626;
+  --brand-primary-lightest: #1a2a25;
+  --brand-text-primary: #e4e6e8;
+  --brand-text-secondary: #9a9fa6;
+  --brand-text-muted: #6b7280;
+
+  /* Interactive (primary button — same blue/violet in dark) */
+  --brand-interactive: #3b82f6;
+  --brand-interactive-hover: #7c3aed;
+  --brand-interactive-text: #ffffff;
+
+  /* Secondary button (alt) — dark mode */
+  --brand-alt-bg: #2a2a2a;
+  --brand-alt-border: #444444;
+  --brand-alt-color: #e4e6e8;
+  --brand-alt-hover-bg: rgba(255, 255, 255, 0.08);
+  --brand-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --brand-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --brand-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --brand-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
+}
