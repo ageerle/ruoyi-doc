@@ -215,26 +215,7 @@ docker images
 
 本地安装需要先部署向量库和模型服务，适合内网环境或对数据隐私有要求的场景。
 
-### 第一步：安装向量库
-
-
-
-
-
-
-
-**常见问题：**
-
-<!-- TODO: 请补充常见问题及解决方案 -->
-
-<details>
-<summary>问题一：xxx</summary>
-
-解决方案：xxx
-
-</details>
-
-### 第二步：安装向量模型
+### 安装向量模型
 
 向量模型用于将文本转换为向量表示，本地安装推荐使用 Ollama 运行开源向量模型。
 
@@ -277,7 +258,7 @@ docker images
 
 <!-- ![配置本地向量模型](/images/knowledge/kn-local-embedding.webp) -->
 
-### 第三步：配置 LLM 模型
+### 配置 LLM 模型
 
 本地安装同样推荐使用 Ollama 运行开源大语言模型。
 
@@ -329,25 +310,6 @@ Ollama 支持的模型列表请查看：https://ollama.com/library
 
 <!-- ![配置本地 LLM 模型](/images/knowledge/kn-local-llm.webp) -->
 
-### 第四步：创建知识库
-
-完成向量库和模型配置后，即可创建知识库。
-
-1. 进入 **应用中心 → 知识库 → 立即体验**
-2. 配置知识库参数，选择本地向量库和向量模型
-
-![创建本地知识库](/images/knowledge/kn-02.webp)
-
-**关键参数说明：**
-
-| 参数 | 说明 |
-|------|------|
-| **分隔符** | 知识块分割规则，默认根据设置中的文本块大小进行分类。如果设置了分隔符，则分隔符包裹的文本会被单独分为一块。 |
-| **检索条数** | 检索时返回的文本块数量。如设置为 3，则将符合条件的前 3 个文本块带入上下文。 |
-| **重叠字符数** | 上一个文本块和下一个文本块重复的字数，提高检索连贯性。 |
-| **向量库** | 选择已安装的本地向量库（Weaviate 或 Milvus）。 |
-| **向量模型** | 选择已配置的本地向量模型。 |
-
 ---
 
 ## 使用知识库
@@ -356,9 +318,9 @@ Ollama 支持的模型列表请查看：https://ollama.com/library
 
 创建完成后，即可在对话中使用知识库进行问答。
 
-![知识库问答示例一](/images/knowledge/kn-03.webp)
+![知识库问答示例一](/images/knowledge/kn-14.webp)
 
-![知识库问答示例二](/images/knowledge/kn-04.webp)
+![知识库问答示例二](/images/knowledge/kn-15.webp)
 
 ::: info 提示
 
@@ -370,8 +332,6 @@ Ollama 支持的模型列表请查看：https://ollama.com/library
 
 ## 视频教程
 
-<!-- TODO: 请补充视频教程二维码 -->
-
 扫描下方二维码观看视频教程：
+![视频教程二维码](/images/knowledge/kn-12.webp)
 
-<!-- ![视频教程二维码](/images/knowledge/kn-video-qrcode.webp) -->
