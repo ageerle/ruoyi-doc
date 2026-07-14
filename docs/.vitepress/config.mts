@@ -33,7 +33,7 @@ export default defineConfig({
         nav: [
           { text: '主页', link: '/' },
           { text: '快速开始', link: '/guide/getting-started/projection' },
-          { text: 'AI编程', link: '/guide/ai-coding/claude-code-beginner' },
+          { text: '扩展功能', link: '/guide/extensions/doc' },
           { text: '更新日志', link: '/guide/changelog/202508_changeLog' },
         ],
         search: {
@@ -70,18 +70,20 @@ export default defineConfig({
             {
               text: '核心功能',
               items: [
-                { text: '模型集成', link: '/guide/features/model' },
-                { text: '平台集成', link: '/guide/features/models-platforms-integration' },
-                { text: '使用知识库', link: '/guide/features/knowledge' },
-                { text: '使用智能体', link: '/guide/features/agent' },
-                // { text: 'MCP协议', link: '/guide/features/mcp' },
+                { text: '模型管理', link: '/guide/features/model' },
+                { text: '知识管理', link: '/guide/features/knowledge' },
+                { text: '工具管理', link: '/guide/features/tools' },
+                { text: '记忆管理', link: '/guide/features/memory' },
+                { text: '技能管理', link: '/guide/features/skills' },
+                { text: '智能体管理', link: '/guide/features/agent' },
+                { text: '提示词管理', link: '/guide/features/prompt-engineering' },
+                { text: '编排管理', link: '/guide/features/orchestration' },
               ]
             },
             {
-              text: 'AI编程',
+              text: '系统管理',
               items: [
-                { text: 'Claude Code使用教程-入门篇', link: '/guide/ai-coding/claude-code-beginner' },
-                { text: 'Claude Code使用教程-进阶篇', link: '/guide/ai-coding/claude-code-advanced' },
+                { text: '资源管理', link: '/guide/system/resources' },
               ]
             },
             {
@@ -89,6 +91,10 @@ export default defineConfig({
               items: [
                 { text: '接口文档', link: '/guide/extensions/doc' },
                 { text: '企微集成', link: '/guide/extensions/weixin' },
+                { text: 'Dify 集成', link: '/guide/extensions/dify' },
+                { text: 'Coze 集成', link: '/guide/extensions/coze' },
+                { text: 'Claude Code 入门篇', link: '/guide/ai-coding/claude-code-beginner' },
+                { text: 'Claude Code 进阶篇', link: '/guide/ai-coding/claude-code-advanced' },
               ]
             },
             {

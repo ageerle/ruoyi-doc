@@ -19,29 +19,45 @@ hero:
       link: http://web.pandarobot.chat
 
 features:
-  - icon: 🌐
-    title: 模型与平台集成
-    details: 支持通用模型、Dify、Coze、FastGPT等多种AI平台与工作流的无缝集成。
-    link: /guide/features/models-platforms-integration
-    linkText: 集成指南
+  - title: 模型管理
+    details: 统一管理 OpenAI、DeepSeek、通义千问、智谱、Ollama、自定义 OpenAI-compatible API 等多厂商模型。
+    link: /guide/features/model
+    linkText: 查看模型管理
 
-  - icon: 📚
-    title: RAG支持
-    details: 集成Milvus/Weaviate向量库、本地向量化模型及Ollama调用本地LLM，实现完全本地化的高效检索与生成，保障数据隐私与性能。
+  - title: 知识管理
+    details: 覆盖文档解析、知识分块、向量化、向量库操作、召回、重排和混合检索完整 RAG 链路。
     link: /guide/features/knowledge
-    linkText: RAG配置指南
+    linkText: 查看知识管理
 
-  - icon: 🛠️
-    title: MCP协议支持
-    details: 开发者只需按照MCP标准开发一次工具接口，即可被所有支持MCP协议的模型或平台复用。
-    link: /guide/features/mcp
-    linkText: MCP协议详解
+  - title: 工具管理
+    details: 支持 Function Calling、内置工具、本地 MCP、远程 MCP 和工具市场等能力。
+    link: /guide/features/tools
+    linkText: 查看工具管理
 
-  - icon: 💻
-    title: AI编程
-    details: 学习Claude Code使用教程，从入门到精通，掌握AI辅助编程的最佳实践。
-    link: /guide/ai-coding/claude-code-beginner
-    linkText: 开始学习
+  - title: 记忆管理
+    details: 管理短期记忆、长期记忆、用户记忆和全局记忆，让多轮对话具备上下文连续性。
+    link: /guide/features/memory
+    linkText: 查看记忆管理
+
+  - title: 技能管理
+    details: 管理 docx、pdf、xlsx 等可复用技能包，承载复杂文档处理任务。
+    link: /guide/features/skills
+    linkText: 查看技能管理
+
+  - title: 智能体管理
+    details: 支持 ReAct、工具调用、监督者模式和多智能体协同。
+    link: /guide/features/agent
+    linkText: 查看智能体管理
+
+  - title: 提示词管理
+    details: 统一组织系统提示词、知识上下文、工具结果和输出格式约束。
+    link: /guide/features/prompt-engineering
+    linkText: 查看提示词管理
+
+  - title: 编排管理
+    details: 通过固定流程管理模型、知识库、工具、人工反馈和外部系统调用。
+    link: /guide/features/orchestration
+    linkText: 查看编排管理
 
 ---
 

@@ -3,29 +3,30 @@
    ======================================== */
 
 :root {
-  /* Brand Green Palette (kept for accent usage only) */
-  --brand-primary: #3c8772;
-  --brand-primary-light: #4a9e87;
-  --brand-primary-lighter: #5cb89e;
-  --brand-primary-lightest: #e8f5f1;
-  --brand-primary-dark: #2d6b5a;
-  --brand-primary-darker: #1f5042;
-  --brand-primary-rgb: 60, 135, 114;
+  /* AgentScope-inspired document palette */
+  --brand-primary: #3c54ac;
+  --brand-primary-light: #4f67c1;
+  --brand-primary-lighter: #8797d8;
+  --brand-primary-lightest: #eef1fb;
+  --brand-primary-dark: #31468f;
+  --brand-primary-darker: #24346c;
+  --brand-primary-rgb: 60, 84, 172;
+  --brand-accent: #ff5722;
 
   /* Surface & Border */
   --brand-surface: #ffffff;
-  --brand-surface-soft: #f6f6f7;
-  --brand-border: #e5e5e5;
-  --brand-border-light: #eeeeee;
+  --brand-surface-soft: #f7f8fa;
+  --brand-border: #dfe3e8;
+  --brand-border-light: #edf0f3;
 
   /* Text */
-  --brand-text-primary: #1a1c1e;
-  --brand-text-secondary: #5a5f66;
-  --brand-text-muted: #8b9199;
+  --brand-text-primary: #1f2933;
+  --brand-text-secondary: #52606d;
+  --brand-text-muted: #7b8794;
 
-  /* Interactive (primary button — blue, hover to violet) */
-  --brand-interactive: #3b82f6;
-  --brand-interactive-hover: #7c3aed;
+  /* Interactive */
+  --brand-interactive: #3c54ac;
+  --brand-interactive-hover: #31468f;
   --brand-interactive-text: #ffffff;
 
   /* Secondary button (alt) */
@@ -35,16 +36,16 @@
   --brand-alt-hover-bg: #f6f6f7;
 
   /* Shadows */
-  --brand-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --brand-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --brand-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --brand-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
+  --brand-shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --brand-shadow-md: 0 6px 16px rgba(15, 23, 42, 0.08);
+  --brand-shadow-lg: 0 12px 28px rgba(15, 23, 42, 0.1);
+  --brand-shadow-xl: 0 18px 40px rgba(15, 23, 42, 0.12);
 
   /* Border Radius */
-  --brand-radius-sm: 8px;
-  --brand-radius-md: 12px;
-  --brand-radius-lg: 16px;
-  --brand-radius-xl: 24px;
+  --brand-radius-sm: 4px;
+  --brand-radius-md: 6px;
+  --brand-radius-lg: 8px;
+  --brand-radius-xl: 10px;
 
   /* Transitions */
   --brand-transition-fast: 0.15s ease;
@@ -56,22 +57,34 @@
     'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   --brand-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code',
     'Source Code Pro', monospace;
+
+  --vp-c-brand-1: #3c54ac;
+  --vp-c-brand-2: #31468f;
+  --vp-c-brand-3: #4f67c1;
+  --vp-c-brand-soft: rgba(60, 84, 172, 0.12);
+  --vp-button-brand-bg: #3c54ac;
+  --vp-button-brand-hover-bg: #31468f;
+  --vp-button-brand-border: #3c54ac;
+  --vp-button-brand-hover-border: #31468f;
+  --vp-home-hero-name-color: var(--brand-primary);
+  --vp-home-hero-name-background: none;
+  --vp-code-block-bg: #f6f8fa;
+  --vp-code-line-highlight-color: rgba(33, 150, 243, 0.08);
 }
 
 /* Dark Mode Overrides */
 .dark {
-  --brand-surface: #000000;
-  --brand-surface-soft: #18181c;
-  --brand-border: #333333;
-  --brand-border-light: #262626;
-  --brand-primary-lightest: #1a2a25;
-  --brand-text-primary: #e4e6e8;
-  --brand-text-secondary: #9a9fa6;
-  --brand-text-muted: #6b7280;
+  --brand-surface: #202127;
+  --brand-surface-soft: #1b1b1f;
+  --brand-border: #3c3f44;
+  --brand-border-light: #2e2e32;
+  --brand-primary-lightest: rgba(60, 84, 172, 0.16);
+  --brand-text-primary: #dfdfd6;
+  --brand-text-secondary: #98989f;
+  --brand-text-muted: #6a6a71;
 
-  /* Interactive (primary button — same blue/violet in dark) */
-  --brand-interactive: #3b82f6;
-  --brand-interactive-hover: #7c3aed;
+  --brand-interactive: #8797d8;
+  --brand-interactive-hover: #4f67c1;
   --brand-interactive-text: #ffffff;
 
   /* Secondary button (alt) — dark mode */
@@ -83,4 +96,14 @@
   --brand-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --brand-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
   --brand-shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
+  --vp-c-bg: #1b1b1f;
+  --vp-c-bg-alt: #161618;
+  --vp-c-bg-elv: #202127;
+  --vp-c-bg-soft: #202127;
+  --vp-c-border: #3c3f44;
+  --vp-c-divider: #2e2e32;
+  --vp-c-gutter: #000000;
+  --vp-nav-bg-color: #1b1b1f;
+  --vp-sidebar-bg-color: #161618;
+  --vp-code-block-bg: #161618;
 }
