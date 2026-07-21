@@ -16,7 +16,7 @@ hero:
       link: /guide/getting-started/projection
     - theme: alt
       text: 演示地址 ->
-      link: http://web.pandarobot.chat
+      link: https://web.ruoyiai.chat
 
 features:
   - title: 模型管理
@@ -49,10 +49,10 @@ features:
     link: /guide/features/agent
     linkText: 查看智能体管理
 
-  - title: 提示词管理
-    details: 统一组织系统提示词、知识上下文、工具结果和输出格式约束。
-    link: /guide/features/prompt-engineering
-    linkText: 查看提示词管理
+  - title: 上下文管理
+    details: 统一组织系统提示词、会话记忆、知识片段、工具结果和输出格式约束。
+    link: /guide/features/context
+    linkText: 查看上下文管理
 
   - title: 编排管理
     details: 通过固定流程管理模型、知识库、工具、人工反馈和外部系统调用。

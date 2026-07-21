@@ -16,7 +16,7 @@ hero:
       link: /en/guide/getting-started/projection
     - theme: alt
       text: Live Demo ->
-      link: http://web.pandarobot.chat
+      link: http://web.ruoyiai.chat
 
 features:
   - icon: 🌐

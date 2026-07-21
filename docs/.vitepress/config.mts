@@ -76,14 +76,8 @@ export default defineConfig({
                 { text: '记忆管理', link: '/guide/features/memory' },
                 { text: '技能管理', link: '/guide/features/skills' },
                 { text: '智能体管理', link: '/guide/features/agent' },
-                { text: '提示词管理', link: '/guide/features/prompt-engineering' },
+                { text: '上下文管理', link: '/guide/features/context' },
                 { text: '编排管理', link: '/guide/features/orchestration' },
-              ]
-            },
-            {
-              text: '系统管理',
-              items: [
-                { text: '资源管理', link: '/guide/system/resources' },
               ]
             },
             {
@@ -93,8 +87,8 @@ export default defineConfig({
                 { text: '企微集成', link: '/guide/extensions/weixin' },
                 { text: 'Dify 集成', link: '/guide/extensions/dify' },
                 { text: 'Coze 集成', link: '/guide/extensions/coze' },
-                { text: 'Claude Code 入门篇', link: '/guide/ai-coding/claude-code-beginner' },
-                { text: 'Claude Code 进阶篇', link: '/guide/ai-coding/claude-code-advanced' },
+                { text: '资源管理', link: '/guide/extensions/resources' },
+                { text: 'AI编程', link: '/guide/ai-coding/ai-programming' },
               ]
             },
             {

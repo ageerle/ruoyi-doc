@@ -2,4 +2,4 @@
 
 > This page is not yet translated. Contributions welcome!
 >
-> [View the Chinese version](/guide/ai-coding/claude-code-beginner)
+> [View the Chinese version](/guide/ai-coding/ai-programming)

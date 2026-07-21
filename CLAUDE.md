@@ -43,8 +43,7 @@ docs/
 │       ├── mcp.md                    # MCP protocol documentation
 │       ├── knowledge.md              # Knowledge base guide
 │       ├── models-platforms-integration.md
-│       ├── claude-code-beginner.md   # Claude Code Tutorial - Beginner
-│       ├── claude-code-advanced.md   # Claude Code Tutorial - Advanced
+│       ├── ai-programming.md         # AI编程（Claude Code 入门/进阶合并）
 │       ├── doc.md                    # API documentation
 │       ├── weixin.md                 # WeChat integration
 │       ├── aihuman.md                # AI Digital Human

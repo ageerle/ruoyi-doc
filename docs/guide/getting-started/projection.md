@@ -7,9 +7,9 @@
 
 ## 快速体验
 
-::: info 在线演示
-- 🌐 [用户端体验](https://web.pandarobot.chat/) - 账号：admin 密码：admin123
-- 🛠️ [管理后台](https://admin.pandarobot.chat/) - 账号：admin 密码：admin123
+::: info 商业版在线演示(开源版需要本地部署体验)
+- 🌐 [用户端体验](https://web.ruoyiai.chat) 
+- 🛠️ [管理后台](https://admin.ruoyiai.chat)
   :::
 
 
@@ -67,8 +67,13 @@ ruoyi-ai/
 │   │   ├── src/main/java/              # 用户、角色、菜单、部门等管理
 │   │   └── pom.xml
 │   ├── ruoyi-chat/                      # 聊天业务模块
-│   │   ├── src/main/java/              # 聊天接口、服务(OpenAI、FastGPT、Dify等)
-│   │   ├── docs/                        # 模块文档(MCP工具接口、数据库智能体)
+│   │   ├── src/main/java/              # 聊天接口、服务(智能体、MCP、知识库、OpenAI、FastGPT、Dify等)
+│   │   │   ├── agent/                  # 智能体(config/domain/manager/tool)
+│   │   │   ├── controller/             # 控制器(agent/chat/coding/knowledge/mcp/shortdrama)
+│   │   │   ├── domain/                 # 实体与数据传输对象(bo/dto/entity/vo)
+│   │   │   ├── mapper/                 # 数据访问层(agent/chat/knowledge)
+│   │   │   ├── factory/                # 模型工厂
+│   │   │   └── config/                 # 配置(agent/mcp)
 │   │   └── pom.xml
 │   ├── ruoyi-generator/                 # 代码生成模块
 │   │   ├── src/main/java/              # 代码生成接口与服务
@@ -100,8 +105,8 @@ ruoyi-ai/
 │   │   └── minio/                       # MinIO对象存储
 │   ├── script/
 │   │   ├── sql/                         # 数据库脚本(初始化&更新)
-│   │   ├── docker/                      # Docker辅助脚本
-│   │   └── leave/                       # 工作流请假示例JSON
+│   │   ├── leave/                       # 工作流请假示例JSON
+│   │   └── install-ffmpeg-windows.ps1   # Windows 安装 ffmpeg 脚本
 │   └── image/                           # 项目图片资源
 │
 ├── 📝 logs/                               # 日志文件目录
