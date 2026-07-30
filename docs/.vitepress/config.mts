@@ -88,7 +88,6 @@ export default defineConfig({
                 { text: 'Dify 集成', link: '/guide/extensions/dify' },
                 { text: 'Coze 集成', link: '/guide/extensions/coze' },
                 { text: '资源管理', link: '/guide/extensions/resources' },
-                { text: '工作流网络搜索', link: '/guide/extensions/workflow-web-search' },
                 { text: 'AI编程', link: '/guide/ai-coding/ai-programming' },
               ]
             },
