@@ -1,5 +1,19 @@
 import { defineConfig } from 'vitepress'
 
+// 新月份放在最前；导航指向最新一期，侧栏始终最多展示 5 期。
+const changelogMonths = [
+  '2026-09', '2026-08', '2026-07', '2026-06', '2026-05',
+  '2026-04', '2026-03', '2026-02', '2026-01',
+  '2025-12', '2025-11', '2025-10', '2025-09',
+  '2025-08', '2025-07', '2025-06', '2025-05',
+]
+const changelogLink = (month: string, prefix = '') =>
+  `${prefix}/guide/changelog/${month.replace('-', '')}_changeLog`
+const recentChangelogs = (prefix = '') => changelogMonths.slice(0, 5).map(month => ({
+  text: month,
+  link: changelogLink(month, prefix),
+}))
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "RuoYi AI",
@@ -33,8 +47,9 @@ export default defineConfig({
         nav: [
           { text: '主页', link: '/' },
           { text: '快速开始', link: '/guide/getting-started/projection' },
+          { text: '核心功能', link: '/guide/features/model', activeMatch: '/guide/features/' },
           { text: '扩展功能', link: '/guide/extensions/doc' },
-          { text: '更新日志', link: '/guide/changelog/202508_changeLog' },
+          { text: '更新日志', link: changelogLink(changelogMonths[0]) },
         ],
         search: {
           provider: 'local',
@@ -71,13 +86,15 @@ export default defineConfig({
               text: '核心功能',
               items: [
                 { text: '模型管理', link: '/guide/features/model' },
+                { text: '平台接入', link: '/guide/features/models-platforms-integration' },
+                { text: '多模态接口', link: '/guide/features/multimodal' },
                 { text: '知识管理', link: '/guide/features/knowledge' },
                 { text: '工具管理', link: '/guide/features/tools' },
-                { text: '记忆管理', link: '/guide/features/memory' },
+                { text: 'MCP 管理', link: '/guide/features/mcp' },
                 { text: '技能管理', link: '/guide/features/skills' },
-                { text: '智能体管理', link: '/guide/features/agent' },
                 { text: '上下文管理', link: '/guide/features/context' },
-                { text: '编排管理', link: '/guide/features/orchestration' },
+                { text: '智能体管理', link: '/guide/features/agent' },
+                { text: '流程编排', link: '/guide/features/orchestration' },
               ]
             },
             {
@@ -85,20 +102,13 @@ export default defineConfig({
               items: [
                 { text: '接口文档', link: '/guide/extensions/doc' },
                 { text: '企微集成', link: '/guide/extensions/weixin' },
-                { text: 'Dify 集成', link: '/guide/extensions/dify' },
-                { text: 'Coze 集成', link: '/guide/extensions/coze' },
                 { text: '资源管理', link: '/guide/extensions/resources' },
                 { text: 'AI编程', link: '/guide/ai-coding/ai-programming' },
               ]
             },
             {
               text: '更新日志',
-              items: [
-                { text: '2025-08', link: '/guide/changelog/202508_changeLog' },
-                { text: '2025-07', link: '/guide/changelog/202507_changeLog' },
-                { text: '2025-06', link: '/guide/changelog/202506_changeLog' },
-                { text: '2025-05', link: '/guide/changelog/202505_changeLog' },
-              ]
+              items: recentChangelogs(),
             }
           ]
         },
@@ -121,8 +131,9 @@ export default defineConfig({
         nav: [
           { text: 'Home', link: '/en/' },
           { text: 'Getting Started', link: '/en/guide/getting-started/projection' },
-          { text: 'AI Coding', link: '/en/guide/ai-coding/claude-code-beginner' },
-          { text: 'Changelog', link: '/en/guide/changelog/202508_changeLog' },
+          { text: 'Core Features', link: '/en/guide/features/model', activeMatch: '/en/guide/features/' },
+          { text: 'Extensions', link: '/en/guide/extensions/doc' },
+          { text: 'Changelog', link: changelogLink(changelogMonths[0], '/en') },
         ],
         search: {
           provider: 'local',
@@ -158,34 +169,30 @@ export default defineConfig({
             {
               text: 'Core Features',
               items: [
-                { text: 'Model & Platform Integration', link: '/en/guide/features/models-platforms-integration' },
-                { text: 'Model Integration', link: '/en/guide/features/model' },
+                { text: 'Model Management', link: '/en/guide/features/model' },
+                { text: 'Platform Integration', link: '/en/guide/features/models-platforms-integration' },
+                { text: 'Multimodal & Media', link: '/en/guide/features/multimodal' },
                 { text: 'Knowledge Base (RAG)', link: '/en/guide/features/knowledge' },
-                { text: 'MCP Protocol', link: '/en/guide/features/mcp' },
-              ]
-            },
-            {
-              text: 'AI Coding',
-              items: [
-                { text: 'Claude Code Tutorial - Beginner', link: '/en/guide/ai-coding/claude-code-beginner' },
-                { text: 'Claude Code Tutorial - Advanced', link: '/en/guide/ai-coding/claude-code-advanced' },
+                { text: 'Tool Management', link: '/en/guide/features/tools' },
+                { text: 'MCP Management', link: '/en/guide/features/mcp' },
+                { text: 'Skills', link: '/en/guide/features/skills' },
+                { text: 'Context Management', link: '/en/guide/features/context' },
+                { text: 'Agents', link: '/en/guide/features/agent' },
+                { text: 'Workflow Orchestration', link: '/en/guide/features/orchestration' },
               ]
             },
             {
               text: 'Extensions',
               items: [
                 { text: 'API Documentation', link: '/en/guide/extensions/doc' },
-                { text: 'WeChat Integration', link: '/en/guide/extensions/weixin' },
+                { text: 'WeCom Integration', link: '/en/guide/extensions/weixin' },
+                { text: 'Resource Management', link: '/en/guide/extensions/resources' },
+                { text: 'AI Coding', link: '/en/guide/ai-coding/ai-programming' },
               ]
             },
             {
               text: 'Changelog',
-              items: [
-                { text: '2025-08', link: '/en/guide/changelog/202508_changeLog' },
-                { text: '2025-07', link: '/en/guide/changelog/202507_changeLog' },
-                { text: '2025-06', link: '/en/guide/changelog/202506_changeLog' },
-                { text: '2025-05', link: '/en/guide/changelog/202505_changeLog' },
-              ]
+              items: recentChangelogs('/en'),
             }
           ]
         },

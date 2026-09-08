@@ -419,6 +419,34 @@ body {
 .VPSidebar .group {
   border-top: 0;
   padding-top: 10px;
+  width: 100%;
+}
+
+/* Keep wide-screen offsets consistent with the fixed, left-aligned sidebar. */
+@media (min-width: 1440px) {
+  .VPSidebar {
+    width: var(--vp-sidebar-width) !important;
+  }
+
+  .VPContent.has-sidebar {
+    padding-left: var(--vp-sidebar-width) !important;
+    padding-right: 0 !important;
+  }
+
+  .VPDoc.has-sidebar > .container {
+    margin-left: 0;
+    justify-content: flex-start;
+  }
+
+  .VPNavBar.has-sidebar > .wrapper > .container > .title {
+    width: var(--vp-sidebar-width);
+    padding-left: 32px;
+  }
+
+  .VPNavBar.has-sidebar > .wrapper > .container > .content {
+    padding-left: var(--vp-sidebar-width);
+    padding-right: 32px;
+  }
 }
 
 .VPSidebarItem.level-0 > .item > .text {

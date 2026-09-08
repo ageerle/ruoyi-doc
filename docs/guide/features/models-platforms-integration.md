@@ -1,578 +1,366 @@
-# 模型与平台集成
+---
+outline: deep
+pageClass: platforms-guide
+---
 
-::: info 你正在阅读的是 [RuoYi AI](https://gitee.com/ageerle/ruoyi-ai)的文档！
+# 模型与外部平台接入
 
-- 如发现文档有误，欢迎提交 [issue](https://gitee.com/ageerle/ruoyi-ai/issues) 帮助我们改进。
+RuoYi AI 可通过兼容接口接入 **FastGPT、RAGFlow**，以及其他提供 **OpenAI Chat Completions** 或 **Anthropic Messages** 接口的平台。项目也提供 **Dify、Coze（扣子）** 的专用适配代码，但当前版本需要补齐厂商选项和凭据接入后才能使用。
+
+## 支持的平台与接入方式 {#supported-platforms}
+
+先找到你使用的平台，确认接口类型，再阅读对应的配置步骤：
+
+| 平台 / 服务 | 接入方式与当前条件 | 配置步骤 |
+| --- | --- | --- |
+| **FastGPT** | 使用 OpenAI 兼容接口，选择 `custom_api`；通过应用 API Key 与 App ID 指定应用。 | [准备 FastGPT 应用](#prepare-fastgpt) → [添加模型](#configure-model)。 |
+| **RAGFlow** | 使用聊天助手的 OpenAI 兼容接口，选择 `custom_api`；请求地址中包含 Chat ID。 | [RAGFlow 接入](#ragflow)。 |
+| **Dify** | 使用 Dify App API，厂商编码为 `dify`；已有适配代码，需先补齐厂商选项和凭据支持。 | [Dify 接入](#dify)。 |
+| **Coze / 扣子** | 使用 Coze Bot API，厂商编码为 `coze`；已有适配代码，需先补齐厂商选项和凭据支持。 | [Coze 接入](#coze)。 |
+| **其他 OpenAI 兼容平台** | 选择 `custom_api`，使用目标服务提供的地址、模型名与凭据；需确认接口兼容。 | [选择协议](#configure-provider) → [添加模型](#configure-model)。 |
+| **Anthropic 兼容服务** | 选择 `custom_anthropic`，调用 Messages 接口；需确认接口兼容。 | [Anthropic 兼容服务接入](#anthropic-platforms)。 |
+
+接入后，外部应用会成为用户端的一个模型选项。应用使用的知识库、提示词和编排仍在外部平台维护，RuoYi AI 负责对话入口、模型选择和本地会话记录。如果你要直接配置 DeepSeek、PPIO 等模型服务，可以先看[模型管理](./model.md)。
+
+下面先介绍共用的厂商与模型配置入口，以 **FastGPT** 演示完整流程，再分别说明 **RAGFlow、Anthropic 兼容服务、Dify 和 Coze** 的配置差异。首次接入可从第 1 节开始；已有运行环境时，直接点击上表中的平台链接。
+
+本页截图来自本地实际运行的管理端和用户端。FastGPT 表单使用示例地址演示填写方式，未提交保存；用户端截图展示已有模型的选择入口。外部平台的调用结果需要使用你的应用和凭据按第 5 节验证。
+
+## 1. 启动管理端，找到配置入口 {#start-admin}
+
+先按[本地安装与启动](../getting-started/install.md)启动后端，再在管理端项目中执行：
+
+```powershell
+Set-Location D:\Project\github\ruoyi-admin
+pnpm install
+pnpm run dev:antd
+```
+
+项目路径替换为你的实际目录，已经安装依赖时可以跳过 `pnpm install`。打开终端显示的地址，默认是 [http://localhost:5666](http://localhost:5666)，登录后展开左侧的 **对话管理**。
+
+接下来会用到两个页面：**厂商管理**决定使用哪一种接口协议，**模型管理**填写具体应用的地址、模型名和密钥引用。两者需要连接同一个后端；当前管理端开发代理默认指向 `http://127.0.0.1:6039`。
+
+如果刚升级了自定义协议功能，请先重新构建并启动更新后的后端与管理端，再进行下面的配置。
+
+## 2. 在厂商管理中选择接入协议 {#configure-provider}
+
+### 2.1 先确认你的平台提供什么接口
+
+打开 **对话管理 → 厂商管理**，先检查是否已有需要的厂商。已有记录直接使用，没有时再点 **新增**。
+
+![运行中的厂商管理列表，可查看厂商编码、API 地址和状态](/images/platforms/provider-list.png)
+
+厂商名称用于识别服务，厂商编码用于选择后端的接入实现。以 FastGPT 为例，它提供 OpenAI 兼容接口，所以可以使用 `custom_api`。不需要为了显示“FastGPT”而另造一个厂商编码，具体应用可以在模型描述里命名。
+
+| 平台提供的接口 | 选择的厂商编码 | 后端发送请求的方式 |
+| --- | --- | --- |
+| OpenAI Chat Completions 兼容接口，例如 FastGPT、RAGFlow 的兼容接口 | 自定义 OpenAI，`custom_api` | Bearer 鉴权，调用 `/chat/completions` |
+| Anthropic Messages 兼容接口 | 自定义 Anthropic，`custom_anthropic` | `x-api-key` 鉴权，调用 `/messages` |
+| Dify App API、Coze Bot API | 专用适配，见[第 6 节](#native-platforms) | 使用各自的平台协议；当前还需要补齐凭据接入 |
+
+::: tip 使用旧数据时
+
+已有的 `custom_api` 记录可能仍叫“自定义厂商”，截图中也是这个名称。查看编码即可确认协议，无需重新创建。列表里存在 Dify、Coze 记录也不代表已经能调用，继续之前请先阅读[当前接入条件](#native-platforms)。
 
 :::
 
-## 一、Dify工作流平台
+### 2.2 添加或检查厂商
 
-### 2.1 什么是Dify
+在新增表单的 **厂商编码** 下拉框中选择协议。可以输入 `custom` 筛选出这两个选项。
 
-Dify 是一个开源的大语言模型（LLM）应用开发平台。提供一套完整的工具和平台，帮助开发者快速构建和部署基于LLM的应用。
+![真实管理端新增表单中的 OpenAI 与 Anthropic 两种自定义协议](/images/platforms/provider-protocols.png)
 
-### 2.2 配置步骤
+以 OpenAI 兼容服务为例：
 
-1. 登录dify官网，创建一个应用
-   ![alt text](/images/dify/dify-01.webp)
+| 字段 | 怎么填 |
+| --- | --- |
+| 厂商名称 | 例如“OpenAI 兼容服务”，用于模型表单中的供应商选项。 |
+| 厂商编码 | 选择 **自定义 OpenAI**，对应 `custom_api`。 |
+| API 地址 | 自定义协议的实际请求地址在模型中单独填写，此处可留空。 |
+| 排序 | 按需要设置，数值越小越靠前。 |
+| 状态 | **启用**。停用后不能用于新的模型调用。 |
+| 厂商描述、图标、备注 | 按需填写。 |
 
-2. 检查模型设置，配置自己的密钥信息
-   ![alt text](/images/dify/dify-02.webp)
-   ![alt text](/images/dify/dify-03.webp)
+点击 **确认** 保存后，回到列表检查编码和状态。同一租户内只能有一条未删除的同编码厂商记录；如果提示编码重复，直接使用已有记录。
 
-3. 发布完成后，点击访问API
-   ![alt text](/images/dify/dify-04.webp)
+**多个 OpenAI 兼容平台可以共用这条厂商记录。** 例如，FastGPT 和 RAGFlow 都选择 `custom_api`，各自在模型管理中配置不同地址和密钥引用。选择自定义厂商时，模型表单会清空请求地址，要求你手动填写。
 
-4. 创建密钥
-   ![alt text](/images/dify/dify-05.webp)
+::: details 厂商配置如何找到接入代码
 
-5. 后台管理配置
-   ![alt text](/images/dify/dify-06.webp)
+普通聊天发送到后端后，`ChatServiceFacade` 先按模型名读取配置，再用 `providerCode` 从 `ChatServiceFactory` 取得对应实现：
 
-6. 效果演示
-   ![alt text](/images/dify/dify-07.webp)
+```java
+ChatModelVo model = chatModelService.selectModelByName(chatRequest.getModel());
+AbstractChatService service =
+    chatServiceFactory.getOriginalService(model.getProviderCode());
+```
 
----
+`custom_api` 对应 `CustomApiServiceImpl`，`custom_anthropic` 对应 `CustomAnthropicServiceImpl`。这两个实现都支持完整响应和流式响应。新增数据库记录只会增加配置，不会自动生成一个新的协议适配类。
 
-## 二、Coze机器人平台
+已有协议够用时，继续配置模型即可；需要编写专用实现时，见[第 8 节](#extend-provider)。
 
-### 3.1 什么是Coze
-
-Coze（扣子）是字节跳动旗下的AI Bot开发平台。提供强大的Agent框架和工作流编排能力，支持多渠道部署和丰富的集成选项。
-
-### 3.2 配置步骤
-
-1. 访问扣子官网创建一个智能体
-   ![alt text](/images/coze/coze-01.webp)
-
-2. 创建完成后，先复制botId，然后点击发布
-   ![alt text](/images/coze/coze-02.webp)
-
-3. 只用勾选API，然后点击发布
-   ![alt text](/images/coze/coze-03.webp)
-
-4. 创建个人访问令牌
-   ![alt text](/images/coze/coze-04.webp)
-
-5. 后台模型管理配置
-   ![alt text](/images/coze/coze-05.webp)
-
-6. 效果展示
-   ![alt text](/images/coze/coze-06.webp)
-
----
-
-## 三、FastGPT知识库平台
-
-### 4.1 什么是FastGPT
-
-FastGPT 是一个基于 LLM 大语言模型的知识库问答系统，将智能对话与可视化编排完美结合，让 AI 应用开发变得简单自然。无论您是开发者还是业务人员，都能轻松打造专属的 AI 应用。
-
-🤖 **快速开始体验**
-- 海外版：[https://tryfastgpt.ai](https://tryfastgpt.ai)
-- 国内版：[https://fastgpt.cn](https://fastgpt.cn)
-
-### 4.2 本地部署 FastGPT
-
-#### 4.2.1 系统要求
-
-- **操作系统**: Ubuntu 22.04
-- **Docker**: version 24.0.5
-- **Docker Compose**: version v2.18.1
-
-::: warning 参考文档
-Docker Compose 快速部署文档参考：[https://doc.tryfastgpt.ai/docs/development/docker/](https://doc.tryfastgpt.ai/docs/development/docker/)
 :::
 
-![部署架构图](/images/fastgpt/deployment-architecture.webp)
+## 3. 准备 FastGPT 应用和后端凭据 {#prepare-fastgpt}
 
-#### 4.2.2 下载部署文件
+### 3.1 从平台取得应用信息
+
+先在 FastGPT 中完成自己的应用配置，确认它在平台调试页面能够回答问题，再发布需要对外使用的版本。然后准备以下信息：
+
+| 需要的信息 | 用在什么地方 |
+| --- | --- |
+| 应用 App ID | 确定调用哪一个 FastGPT 应用，可从应用详情地址中取得。 |
+| 有权限访问该应用的 API Key | 后端调用 FastGPT 时鉴权。 |
+| 对话接口地址 | 例如 `https://fastgpt.example.com/api/v1/chat/completions`。使用你的实际 HTTPS 服务地址。 |
+
+FastGPT 支持将鉴权值组合为 `<API_KEY>-<APP_ID>`，这样通用 OpenAI 客户端无需在请求体中另传 `appId`。FastGPT 实际使用的模型由应用编排决定，RuoYi AI 中可以把这条配置命名为 `fastgpt-app`。依据：[FastGPT 对话接口](https://doc.fastgpt.io/zh-CN/openapi/chat)。
+
+### 3.2 把地址和密钥配置到后端进程
+
+在启动 **RuoYi AI 后端**的终端、IDE 运行配置或容器环境中，配置这一对环境变量：
+
+```text
+CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1
+CUSTOM_OPENAI_FASTGPT_API_KEY=<API_KEY>-<APP_ID>
+```
+
+上面的域名、API Key 和 App ID 都要替换。Windows 源码开发可以在启动后端的 PowerShell 中设置：
+
+```powershell
+$env:CUSTOM_OPENAI_FASTGPT_BASE_URL = 'https://fastgpt.example.com/api/v1'
+$env:CUSTOM_OPENAI_FASTGPT_API_KEY = '<API_KEY>-<APP_ID>'
+# 接着在这个终端中启动后端，或将同样的变量配置到 IDE 的后端运行配置。
+```
+
+**已经运行的后端需要重启才能读取新变量。** 在另一个终端设置变量，或只修改前端的 `.env`，不会让正在运行的 Java 进程获得这些值。
+
+模型表单稍后填写 `env:CUSTOM_OPENAI_FASTGPT_API_KEY`。其中 `env:` 表示引用，真正的密钥保存在后端环境中。后端会把 `_API_KEY` 换成 `_BASE_URL`，查找与这份凭据配套的地址；保存和调用时都要求它与模型中的请求地址一致。
+
+### 3.3 先确认平台接口能够独立调用
+
+在后端所在机器或容器的网络环境中，按平台 API 文档调用一次。这样可以先确认应用已发布、密钥有权限、地址可访问，再继续检查 RuoYi AI 配置。
+
+::: details 使用 curl 检查 FastGPT 流式接口
+
+下面是 **Bash / WSL / Git Bash** 示例。先在这个终端中设置与上面一致的 `CUSTOM_OPENAI_FASTGPT_BASE_URL` 和 `CUSTOM_OPENAI_FASTGPT_API_KEY`，再执行：
 
 ```bash
-# 创建目录
-mkdir fastgpt
-cd fastgpt
-
-# 下载部署文件（基于pgvector向量库）
-curl -O https://raw.githubusercontent.com/labring/FastGPT/main/projects/app/data/config.json
-
-# pgvector 版本(测试推荐，简单快捷)
-curl -o docker-compose.yml https://raw.githubusercontent.com/labring/FastGPT/main/deploy/docker/docker-compose-pgvector.yml
+curl --no-buffer --fail-with-body \
+  "${CUSTOM_OPENAI_FASTGPT_BASE_URL%/}/chat/completions" \
+  -H "Authorization: Bearer ${CUSTOM_OPENAI_FASTGPT_API_KEY}" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"fastgpt-app","stream":true,"messages":[{"role":"user","content":"你好，请介绍这个应用的用途。"}]}'
 ```
 
-#### 4.2.3 配置 yaml 文件（pgvector）
+正常情况下能看到连续的 `data:` 事件，内容包含回答片段，最后收到结束事件。再把 `stream` 改为 `false` 检查完整响应，确认 `choices[0].message.content` 中有回答。
 
-成功下载 `config.json`、`docker-compose.yml` 文件
+如果平台提示缺少 `appId`，先核对组合凭据是否正确。若目标版本必须在 JSON 中传 `appId`，或应用依赖额外的 `variables`，当前通用配置无法直接表达这些字段，需要[扩展专用适配](#extend-provider)。
 
-![文件下载成功](/images/fastgpt/file-download-success.webp)
-
-::: tip 配置说明
-统一修改为 **阿里云拉取镜像地址**，速度快！这里我修改了 **登录 FastGPT 密码、minio 的地址**
 :::
 
-```yaml
-# 数据库的默认账号和密码仅首次运行时设置有效
-# 如果修改了账号密码，记得改数据库和项目连接参数，别只改一处~
-# 该配置文件只是给快速启动，测试使用。正式使用，记得务必修改账号密码，以及调整合适的知识库参数，共享内存等。
-# 如何无法访问 dockerhub 和 git，可以用阿里云（阿里云没有arm包）
+## 4. 在模型管理中添加平台应用 {#configure-model}
 
-version: '3.3'
-services:
-  # Vector DB
-  pg:
-    # image: pgvector/pgvector:0.8.0-pg15 # docker hub
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt/pgvector:v0.8.0-pg15 # 阿里云
-    container_name: pg
-    restart: always
-    # ports: # 生产环境建议不要暴露
-    #   - 5432:5432
-    networks:
-      - fastgpt
-    environment:
-      # 这里的配置只有首次运行生效。修改后，重启镜像是不会生效的。需要把持久化数据删除再重启，才有效果
-      - POSTGRES_USER=username
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=postgres
-    volumes:
-      - ./pg/data:/var/lib/postgresql/data
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'username', '-d', 'postgres']
-      interval: 5s
-      timeout: 5s
-      retries: 10
+### 4.1 确认“对话”分类已经维护
 
-  # DB
-  mongo:
-    # image: mongo:5.0.18 # dockerhub
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt/mongo:5.0.18 # 阿里云
-    # image: mongo:4.4.29 # cpu不支持AVX时候使用
-    container_name: mongo
-    restart: always
-    networks:
-      - fastgpt
-    command: mongod --keyFile /data/mongodb.key --replSet rs0
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=myusername
-      - MONGO_INITDB_ROOT_PASSWORD=mypassword
-    volumes:
-      - ./mongo/data:/data/db
-    entrypoint:
-      - bash
-      - -c
-      - |
-        openssl rand -base64 128 > /data/mongodb.key
-        chmod 400 /data/mongodb.key
-        chown 999:999 /data/mongodb.key
-        echo 'const isInited = rs.status().ok === 1
-        if(!isInited){
-          rs.initiate({
-              _id: "rs0",
-              members: [
-                  { _id: 0, host: "mongo:27017" }
-              ]
-          })
-        }' > /data/initReplicaSet.js
-        # 启动MongoDB服务
-        exec docker-entrypoint.sh "$$@" &
+进入 **对话管理 → 模型管理 → 新增**，查看 **模型分类** 中是否有“对话”。这个选项来自字典，数据键值必须是 `chat`。
 
-        # 等待MongoDB服务启动
-        until mongo -u myusername -p mypassword --authenticationDatabase admin --eval "print('waited for connection')"; do
-          echo "Waiting for MongoDB to start..."
-          sleep 2
-        done
+缺少选项时，先到 **系统管理 → 字典管理**，找到 **模型分类**（`chat_model_category`），在字典数据中新增 **对话 / chat**；已有记录时直接检查标签和键值。保存后刷新字典缓存，再重新打开模型表单。详细字段说明见[在字典中维护模型分类](./model.md#model-category-dict)。
 
-        # 执行初始化副本集的脚本
-        mongo -u myusername -p mypassword --authenticationDatabase admin /data/initReplicaSet.js
+可以先在左侧“字典类型”中搜索 `chat_model_category`，点击对应记录，再检查右侧字典数据。
 
-        # 等待docker-entrypoint.sh脚本执行的MongoDB服务进程
-        wait $$!
+![运行中的字典管理页面，模型分类字典包含对话标签及 chat 键值](/images/platforms/model-category-dict.png)
 
-  redis:
-    image: redis:7.2-alpine
-    container_name: redis
-    networks:
-      - fastgpt
-    restart: always
-    command: |
-      redis-server --requirepass mypassword --loglevel warning --maxclients 10000 --appendonly yes --save 60 10 --maxmemory 4gb --maxmemory-policy noeviction
-    healthcheck:
-      test: ['CMD', 'redis-cli', '-a', 'mypassword', 'ping']
-      interval: 10s
-      timeout: 3s
-      retries: 3
-      start_period: 30s
-    volumes:
-      - ./redis/data:/data
+### 4.2 选择厂商，填写应用连接信息
 
-  fastgpt-minio:
-    image: minio/minio:latest
-    container_name: fastgpt-minio
-    restart: always
-    networks:
-      - fastgpt
-    ports: # comment out if you do not need to expose the port (in production environment, you should not expose the port)
-      - '9000:9000'
-      - '9001:9001'
-    environment:
-      - MINIO_ROOT_USER=minioadmin
-      - MINIO_ROOT_PASSWORD=minioadmin
-    volumes:
-      - ./fastgpt-minio:/data
-    command: server /data --console-address ":9001"
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9000/minio/health/live']
-      interval: 30s
-      timeout: 20s
-      retries: 3
+回到模型新增表单，先选择第 2 节配置的供应商，再填写其余字段：
 
-  fastgpt:
-    container_name: fastgpt
-    # image: ghcr.io/labring/fastgpt:v4.10.0 # git
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt:v4.10.0 # 阿里云
-    ports:
-      - 3000:3000
-    networks:
-      - fastgpt
-    depends_on:
-      - mongo
-      - sandbox
-      - pg
-    restart: always
-    environment:
-      # 前端外部可访问的地址，用于自动补全文件资源路径。例如 https:fastgpt.cn，不能填 localhost。这个值可以不填，不填则发给模型的图片会是一个相对路径，而不是全路径，模型可能伪造Host。
-      - FE_DOMAIN=
-      # root 密码，用户名为: root。如果需要修改 root 密码，直接修改这个环境变量，并重启即可。
-      - DEFAULT_ROOT_PSW=ruoyi-ai@lindaxia  # 登录凭证密钥
-      - TOKEN_KEY=any
-      # root的密钥，常用于升级时候的初始化请求
-      - ROOT_KEY=root_key
-      # 文件阅读加密
-      - FILE_TOKEN_KEY=filetoken
-      # 密钥加密key
-      - AES256_SECRET_KEY=fastgptkey
+| 模型字段 | FastGPT 示例 | 填写说明 |
+| --- | --- | --- |
+| 供应商 | 自定义厂商，或你设置的厂商名称 | 对应编码必须是 `custom_api`，选中后应显示“接口协议：OpenAI Chat Completions”。 |
+| 模型分类 | 对话 | 保存的值是 `chat`。 |
+| 模型名称 | `fastgpt-app` | 在 RuoYi AI 内识别这条配置，并作为请求的 `model` 字段发送。避免与同租户其他模型重名。 |
+| 模型描述 | `FastGPT 知识库助手` | 用户端优先显示这个名称，便于用户选择。 |
+| 请求地址 | `https://fastgpt.example.com/api/v1` | 与 `CUSTOM_OPENAI_FASTGPT_BASE_URL` 一致。 |
+| 密钥 | `env:CUSTOM_OPENAI_FASTGPT_API_KEY` | 填引用，实际值已在后端配置。 |
+| 备注 | 按需填写 | 可以记录对应应用的用途。 |
 
-      # plugin 地址
-      - PLUGIN_BASE_URL=http://fastgpt-plugin:3000
-      - PLUGIN_TOKEN=xxxxxx
-      # sandbox 地址
-      - SANDBOX_URL=http://sandbox:3000
-      # AI Proxy 的地址，如果配了该地址，优先使用
-      - AIPROXY_API_ENDPOINT=http://aiproxy:3000
-      # AI Proxy 的 Admin Token，与 AI Proxy 中的环境变量 ADMIN_KEY
-      - AIPROXY_API_TOKEN=aiproxy
+![真实模型新增表单，演示 FastGPT 的协议、分类、请求地址和密钥引用](/images/platforms/fastgpt-model-form.png)
 
-      # 数据库最大连接数
-      - DB_MAX_LINK=30
-      # MongoDB 连接参数. 用户名myusername,密码mypassword。
-      - MONGODB_URI=mongodb://myusername:mypassword@mongo:27017/fastgpt?authSource=admin
-      # Redis 连接参数
-      - REDIS_URL=redis://default:mypassword@redis:6379
-      # 向量库 连接参数
-      - PG_URL=postgresql://username:password@pg:5432/postgres
+图中使用示例域名，表单未提交。实际保存前，请换成自己的地址，并完成后端环境变量配置。
 
-      # 日志等级: debug, info, warn, error
-      - LOG_LEVEL=info
-      - STORE_LOG_LEVEL=warn
-      # 工作流最大运行次数
-      - WORKFLOW_MAX_RUN_TIMES=1000
-      # 批量执行节点，最大输入长度
-      - WORKFLOW_MAX_LOOP_TIMES=100
-      # 对话文件过期天数
-      - CHAT_FILE_EXPIRE_TIME=7
-    volumes:
-      - ./config.json:/app/data/config.json
+“请求地址”填写的是 **API 基础地址（Base URL）**。当前 OpenAI 客户端会在其后追加 `/chat/completions`，因此上面的配置最终请求：
 
-  sandbox:
-    container_name: sandbox
-    # image: ghcr.io/labring/fastgpt-sandbox:v4.10.0 # git
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt-sandbox:v4.10.0 # 阿里云
-    networks:
-      - fastgpt
-    restart: always
-
-  fastgpt-mcp-server:
-    container_name: fastgpt-mcp-server
-    # image: ghcr.io/labring/fastgpt-mcp_server:v4.10.0 # git
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt-mcp_server:v4.10.0 # 阿里云
-    ports:
-      - 3005:3000
-    networks:
-      - fastgpt
-    restart: always
-    environment:
-      - FASTGPT_ENDPOINT=http://fastgpt:3000
-
-  fastgpt-plugin:
-    # image: ghcr.io/labring/fastgpt-plugin:v0.1.0 # git
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt-plugin:v0.1.0 # 阿里云
-    container_name: fastgpt-plugin
-    restart: always
-    networks:
-      - fastgpt
-    environment:
-      - AUTH_TOKEN=xxxxxx # disable authentication token if you do not set this variable
-      # 改成 minio 公网地址 例如 http://minio.xxx.com 或者  http://<ip>:<port>
-      - MINIO_CUSTOM_ENDPOINT=http://192.168.1.126:9000
-      - MINIO_ENDPOINT=fastgpt-minio
-      - MINIO_PORT=9000
-      - MINIO_USE_SSL=false
-      - MINIO_ACCESS_KEY=minioadmin
-      - MINIO_SECRET_KEY=minioadmin
-      - MINIO_BUCKET=fastgpt-plugins
-    depends_on:
-      fastgpt-minio:
-        condition: service_healthy
-
-  # AI Proxy
-  aiproxy:
-    # image: ghcr.io/labring/aiproxy:v0.1.7
-    image: registry.cn-hangzhou.aliyuncs.com/labring/aiproxy:v0.1.7 # 阿里云
-    container_name: aiproxy
-    restart: unless-stopped
-    depends_on:
-      aiproxy_pg:
-        condition: service_healthy
-    networks:
-      - fastgpt
-    environment:
-      # 对应 fastgpt 里的AIPROXY_API_TOKEN
-      - ADMIN_KEY=aiproxy
-      # 错误日志详情保存时间（小时）
-      - LOG_DETAIL_STORAGE_HOURS=1
-      # 数据库连接地址
-      - SQL_DSN=postgres://postgres:aiproxy@aiproxy_pg:5432/aiproxy
-      # 最大重试次数
-      - RETRY_TIMES=3
-      # 不需要计费
-      - BILLING_ENABLED=false
-      # 不需要严格检测模型
-      - DISABLE_MODEL_CONFIG=true
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:3000/api/status']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-  aiproxy_pg:
-    # image: pgvector/pgvector:0.8.0-pg15 # docker hub
-    image: registry.cn-hangzhou.aliyuncs.com/fastgpt/pgvector:v0.8.0-pg15 # 阿里云
-    restart: unless-stopped
-    container_name: aiproxy_pg
-    volumes:
-      - ./aiproxy_pg:/var/lib/postgresql/data
-    networks:
-      - fastgpt
-    environment:
-      TZ: Asia/Shanghai
-      POSTGRES_USER: postgres
-      POSTGRES_DB: aiproxy
-      POSTGRES_PASSWORD: aiproxy
-    healthcheck:
-      test: ['CMD', 'pg_isready', '-U', 'postgres', '-d', 'aiproxy']
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
-networks:
-  fastgpt:
+```text
+https://fastgpt.example.com/api/v1/chat/completions
 ```
 
-#### 4.2.4 启动容器
+自定义协议也接受完整的对应接口地址，后端会去掉末尾接口路径再交给客户端；按表格填写基础地址更容易检查。不要填平台网页控制台地址。
 
-```bash
-cd fastgpt
+### 4.3 保存后检查什么
 
-# 启动容器
-docker-compose up -d
+点击 **确认**，检查模型列表中是否出现 `fastgpt-app`，供应商是否正确，分类是否为“对话”。保存成功表示配置通过校验，下一步还需要实际发送消息。
 
-# 关闭容器
-docker-compose down
+如果提示缺少 `CUSTOM_OPENAI_FASTGPT_BASE_URL`，回到第 3 节检查 **Java 进程**的环境变量；如果提示地址不一致，核对模型地址和配套的 `_BASE_URL`。编辑自定义模型时，密钥留空可以保留原引用。
+
+### 4.4 RAGFlow 接入 {#ragflow}
+
+RAGFlow 使用聊天助手的 OpenAI 兼容接口，配置入口与 FastGPT 相同。先创建并调试好聊天助手，取得该助手的 **Chat ID** 和 **API Key**，再填写以下配置：
+
+| 配置项 | RAGFlow 填写方式 |
+| --- | --- |
+| 厂商编码 | `custom_api`，可复用 FastGPT 使用的自定义 OpenAI 厂商记录。 |
+| 模型分类 | 对话（`chat`）。 |
+| 模型名称 | 按目标版本的 API 文档填写有效模型名。 |
+| 请求地址 | `https://ragflow.example.com/api/v1/openai/<CHAT_ID>`。 |
+| 模型中的密钥 | `env:CUSTOM_OPENAI_RAGFLOW_API_KEY`。 |
+| 后端密钥变量 | `CUSTOM_OPENAI_RAGFLOW_API_KEY`，保存 RAGFlow API Key。 |
+| 后端地址变量 | `CUSTOM_OPENAI_RAGFLOW_BASE_URL`，与模型中的请求地址一致。 |
+
+将示例域名和 `<CHAT_ID>` 替换为实际值，在后端配置好环境变量并重启，然后保存模型。最终请求路径是 `/api/v1/openai/<CHAT_ID>/chat/completions`，因此本项目的基础地址不要额外保留末尾 `/chat`。模型名和兼容路径以部署版本自带的 API 文档为准，参考 [RAGFlow OpenAI-Compatible API](https://ragflow.io/docs/http_api_reference#openai-compatible-api)。保存后按[第 5 节](#verify-chat)在用户端选择该模型验证。
+
+### 4.5 Anthropic 兼容服务接入 {#anthropic-platforms}
+
+先确认目标服务提供 Anthropic Messages 兼容接口，取得可用的模型 ID、API 地址和密钥。创建或启用 `custom_anthropic` 厂商，再选择它配置模型；表单应显示“接口协议：Anthropic Messages”。
+
+| 配置项 | Anthropic 兼容服务填写方式 |
+| --- | --- |
+| 厂商编码 | `custom_anthropic`。 |
+| 模型分类 | 对话（`chat`）。 |
+| 模型名称 | 服务提供方公布的模型 ID。 |
+| 请求地址 | 例如 `https://gateway.example.com/v1`，替换为实际基础地址。 |
+| 模型中的密钥 | `env:CUSTOM_ANTHROPIC_GATEWAY_API_KEY`。 |
+| 后端密钥变量 | `CUSTOM_ANTHROPIC_GATEWAY_API_KEY`，保存该服务的密钥。 |
+| 后端地址变量 | `CUSTOM_ANTHROPIC_GATEWAY_BASE_URL`，与模型中的请求地址一致。 |
+
+在后端配置好环境变量并重启，再保存模型。后端使用 Anthropic 客户端发送 `x-api-key` 和版本请求头；示例地址最终请求 `/v1/messages`，不能把 OpenAI 的 `/chat/completions` 地址直接填到这里。完整配置与 curl 示例见[选择自定义厂商协议](./model.md#custom-provider)，用户端验证见[第 5 节](#verify-chat)。
+
+这两类自定义协议当前都要求 HTTPS 地址。同一个协议下的不同平台共用厂商记录，各模型分别填写地址；停用这条厂商记录会同时影响其下的模型。
+
+## 5. 到用户端选择模型并发起对话 {#verify-chat}
+
+### 5.1 启动并登录用户端
+
+保持后端运行，另开终端启动 `ruoyi-web`：
+
+```powershell
+Set-Location D:\Project\github\ruoyi-web
+pnpm install
+pnpm run dev --port 5180
 ```
 
-![容器启动成功](/images/fastgpt/container-startup.webp)
+打开 [http://localhost:5180/chat](http://localhost:5180/chat)，登录与管理端配置处于同一租户的账号。这里显式使用 `5180`，避免与本地文档站的 `5173` 冲突；端口被占用时以终端实际输出为准。用户端 `VITE_API_URL` 应指向与管理端相同的后端。
 
-#### 4.2.5 检查容器状态
+### 5.2 选择刚才配置的平台应用
 
-![容器状态检查](/images/fastgpt/container-status.webp)
+1. 点击左侧 **新对话**。
+2. 展开输入框左下角的模型按钮。如果当前显示智能体或工作流，先选择 **切换到模型**。
+3. 找到并选择 **FastGPT 知识库助手**，确认输入框下方的模型名称已经变化。
+4. 输入一个你在 FastGPT 调试页验证过的问题，再点击发送。
 
-### 4.3 测试访问
+![实际运行的用户端模型下拉列表，入口位于输入框左下角](/images/platforms/user-model-select.png)
 
-::: tip 访问信息
-- **访问地址**: [http://192.168.1.126:3000/login](http://192.168.1.126:3000/login)
-- **登录账号**: root/ruoyi-ai@lindaxia
+图中是本地已有的模型列表，用于说明选择入口；FastGPT 示例没有保存，因此不会出现在这张图中。你的配置保存后，重新展开模型列表即可加载。列表优先显示“模型描述”，描述为空时显示模型名称。
+
+### 5.3 确认完整回答和会话记录
+
+第一次测试先使用普通模型对话，检查以下结果：
+
+| 检查动作 | 预期结果 |
+| --- | --- |
+| 发送一条短问题 | 回答逐段出现，最后正常结束。 |
+| 继续追问 | 能结合本次会话上下文回答。 |
+| 刷新页面，再从左侧打开会话 | 已完成的问答仍然存在。 |
+| 检查外部平台的调用记录（如平台提供） | 能找到对应应用的一次调用。 |
+
+开发者还可以打开浏览器 **Network**，检查 `POST /chat/send` 的响应。流式调用应使用 `text/event-stream`，既有回答片段，也有正常结束信号。**HTTP 200 或创建出会话都不能单独证明模型调用成功**，还要确认实际回答；如果收到错误事件或没有回答，按[故障排查](#troubleshooting)检查。
+
+完成普通聊天验证后，再把模型用于[智能体](./agent.md)或[流程编排](./orchestration.md)。需要完整响应的调用场景还应单独验证 `ChatModel`；若涉及工具调用、结构化输出，也要检查目标平台是否支持这些能力。
+
+::: details 前端如何把选择结果交给后端
+
+`ModelSelect` 请求 `GET /system/model/modelList`，普通聊天默认读取 `chat` 分类。选择结果保存在 `useModelStore` 中，发送时把 `modelName` 放入 `model` 字段：
+
+```json
+{
+  "model": "fastgpt-app",
+  "content": "你好，请介绍这个应用的用途。"
+}
+```
+
+实际请求还包含会话 ID 等字段。后端读取该模型的 `providerCode`、`apiHost` 和密钥引用，再调用对应客户端。用户端无需配置第三方平台的 API Key。
+
 :::
 
-成功登录！
+## 6. Dify、Coze 当前怎样接入 {#native-platforms}
 
-![登录成功界面](/images/fastgpt/login-success.webp)
+这两个平台使用专用聊天协议。仓库已有 `DifyChatServiceImpl` 和 `CozeChatServiceImpl`，但当前统一凭据策略还未支持它们的厂商凭据，管理端新增厂商的静态选项中也没有 `dify`、`coze`。**现阶段需要先补齐接入代码，不能只在模型里填入平台 Key 就使用。**
 
-### 4.4 配置 FastGPT
+### 6.1 Dify 接入 {#dify}
 
-#### 4.4.1 模型配置
+1. 在 Dify 创建并发布聊天应用，在应用内生成 **App API Key**，取得服务 API 地址；先用官方 API 验证应用可用。
+2. 按[扩展步骤](#extend-provider)补齐 `dify` 厂商选项、凭据引用和地址绑定，再配置模型。`apiHost` 通常为 `https://api.dify.ai/v1` 或自建地址，模型名称是 RuoYi AI 内部配置名。
+3. 完成代码接入并重启后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见 [Dify API 入门](https://docs.dify.ai/en/api-reference/guides/get-started)。
 
-选择模型商进行测试（以PPIO欧派云为例）：
+`DifyChatServiceImpl` 将当前消息和历史上下文拼成 `query`，`inputs` 固定为空对象；流式调用解析 Dify 事件，完整响应调用使用 `blocking` 模式。依赖自定义必填 `inputs` 的应用，还需要补字段映射。`message_replace` 只能影响最终保存的内容，无法替换已经发给前端的片段。
 
-::: info 参考文档
-- 接入参考文档：[https://ppio.cn/docs/third-party/fastgpt-use](https://ppio.cn/docs/third-party/fastgpt-use)
-- 官方文档：[https://ppio.cn/model-api/console](https://ppio.cn/model-api/console)
-:::
+### 6.2 Coze / 扣子接入 {#coze}
 
-![PPIO 模型商界面](/images/fastgpt/ppio-interface.webp)
+1. 将 Coze Bot 发布为 API 服务，取得 **Bot ID**，并配置有聊天权限的访问 Token；先用官方 API 验证 Bot 可用。
+2. 按[扩展步骤](#extend-provider)补齐 `coze` 厂商选项、凭据引用和地址绑定，再配置模型。**模型名称填写 Bot ID**，中国区 Host 为 `https://api.coze.cn`，Host、Bot 和 Token 要属于同一区域。
+3. 完成代码接入并重启后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见[扣子 SDK 快速开始](https://docs.coze.cn/developer_guides_python_getting_started)。
 
-**索引模型（qwen/qwen3-embedding-8b）**
+`CozeChatServiceImpl` 把模型名称作为 `botID`，由 RuoYi AI 传递历史消息，设置 `autoSaveHistory=false`。完整响应模式也通过消费 Coze 的流式事件聚合答案实现。
 
-![索引模型配置](/images/fastgpt/index-model-config.webp)
+### 6.3 两个平台共用的接入条件
 
-点击"新增模型"，配置好模型参数，点击"确定"
+两个适配类最终都会调用 `resolveApiKeyForConfiguredEndpoint()`。因此增加选项或数据库记录后，还必须扩展 `ChatModelCredentialPolicy` 和 `ChatModelSecretReference`，让保存与调用使用同一套厂商凭据规则。
 
-::: details 模型配置参数
-- **模型**: qwen/qwen3-embedding-8b
-- **默认分块长度**: 1024
-- **最大上下文**: 4096
-- **额外 Body 参数**:
-  ```json
-  {
-    "dimensions": 1024
-  }
-  ```
-- **API地址**: [https://api.ppinfra.com/v3/openai/embeddings](https://api.ppinfra.com/v3/openai/embeddings)
-- **API令牌**: xxxxxxxxxxxxx
-:::
+不要把 Dify `/chat-messages` 或 Coze `/v3/chat` 地址直接填给 `custom_api`。如果通过网关转换协议，应先验证网关确实提供 OpenAI 或 Anthropic 兼容接口，再按本页的自定义协议流程配置。
 
-![模型配置界面](/images/fastgpt/model-config-interface.webp)
+## 7. 卡在哪一步，就从哪一步排查 {#troubleshooting}
 
-点击"模型测试"通过
+| 遇到的现象 | 下一步检查 |
+| --- | --- |
+| 模型表单找不到供应商 | 在同租户的厂商管理中确认记录存在且已启用，再重新打开模型表单。 |
+| “模型分类”没有“对话” | 检查 `chat_model_category` 字典中的 `chat`，刷新字典缓存和页面。 |
+| 保存时提示缺少地址环境变量 | 把对应的 `_BASE_URL` 配置到后端进程环境中，并重新启动后端。 |
+| 提示请求地址与密钥绑定地址不一致 | 核对模型的请求地址及同一凭据前缀的 `_BASE_URL`，包括路径。 |
+| 提示密钥引用不允许或协议不匹配 | OpenAI 使用 `env:CUSTOM_OPENAI_…_API_KEY`，Anthropic 使用 `env:CUSTOM_ANTHROPIC_…_API_KEY`；不要填明文或其他厂商的引用。 |
+| 保存成功，调用时提示环境变量未配置 | 地址校验已通过，但实际 Key 变量缺失或为空；检查 Java 进程能否读取 `_API_KEY`。 |
+| 401 / 403 | 回到平台检查 Key、权限、区域和应用授权；FastGPT 还要检查 Key 与 App ID 的组合。 |
+| 404 | 对照平台文档检查最终接口路径；FastGPT 通常为 `/api/v1/chat/completions`，RAGFlow 路径还包含 Chat ID。 |
+| 用户端找不到模型 | 检查账号租户、模型分类是否为 `chat`、厂商是否启用，然后重新展开模型列表。 |
+| 会话已创建，但没有回答 | 同时检查 `/chat/send` 的响应内容和后端日志；继续用平台 API 单独验证，区分配置、鉴权与响应解析问题。 |
+| 直到结束才一次性显示回答 | 检查平台是否真正返回流式数据，以及反向代理是否缓冲 SSE。 |
+| 普通聊天可用，智能体或编排失败 | 进一步验证完整响应、工具调用、结构化输出等当前场景需要的能力。 |
 
-![模型测试通过](/images/fastgpt/model-test-pass.webp)
+## 8. 平台有专用字段时，怎样扩展 {#extend-provider}
 
-**语言模型**
+通用协议适合通过地址、模型名和标准鉴权完成的聊天调用。如果应用必须传工作流变量、额外请求头，或返回专用事件，就需要编写平台适配。可以参考[已接入的 PPIO 示例](./model.md#provider-extension)，再按下面的顺序完成：
 
-![语言模型配置](/images/fastgpt/language-model-config.webp)
+1. 在 `ChatModeType` 中定义唯一厂商编码，实现 `AbstractChatService`，并用 `@Service` 注册。`getProviderName()` 返回同一编码，工厂会自动收集实现。
+2. 实现 `buildStreamingChatModel()` 和 `buildChatModel()`，完成请求字段、鉴权、完整响应和流式事件的转换。
+3. 在 `ChatModelSecretReference`、`ChatModelCredentialPolicy` 中支持该厂商独立的凭据引用和可信地址。配置保存、批量更新密钥和实际调用要使用一致的校验规则。
+4. 在管理端 `apps/web-antd/src/views/chat/provider/options.ts` 中增加厂商选项；有专用配置字段时，继续补齐模型表单、后端字段和持久化。
+5. 覆盖正常回答、鉴权失败、空响应、超时和流中断的测试，重新构建并启动后端。
+6. 回到本页，从厂商配置、模型配置到用户端对话走完一遍，再验证智能体或编排中的使用。
 
-点击"新增模型"，配置好模型参数，点击"确定"
+后端适配类位于 `ruoyi-modules/ruoyi-chat/src/main/java/org/ruoyi/service/chat/impl/provider/`，凭据规则位于 `ruoyi-common/ruoyi-common-chat/src/main/java/org/ruoyi/common/chat/security/`。
 
-::: details 语言模型配置参数
-- **最大上下文**: 163840
-- **知识库最大引用**: 163840
-- **最大响应 tokens**: 20000
-- **最大温度**: 1.2
-- **响应格式**:
-  ```json
-  [
-    "text",
-    "json_object",
-    "json_schema"
-  ]
-  ```
-- **API地址**: [https://api.ppinfra.com/v3/openai/chat/completions](https://api.ppinfra.com/v3/openai/chat/completions)
-:::
+<style>
+.platforms-guide .vp-doc table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
 
-![语言模型配置界面](/images/fastgpt/language-model-interface.webp)
+.platforms-guide .vp-doc th:first-child,
+.platforms-guide .vp-doc td:first-child {
+  min-width: 96px;
+}
 
-点击"模型测试"通过
-
-![语言模型测试通过](/images/fastgpt/language-model-test.webp)
-
-#### 4.4.2 新增知识库
-
-![知识库创建](/images/fastgpt/knowledge-base-create.webp)
-
-**分块详情**
-
-![分块详情配置](/images/fastgpt/chunk-details.webp)
-
-**新建成功**
-
-![知识库创建成功](/images/fastgpt/knowledge-base-success.webp)
-
-#### 4.4.3 创建简易应用（AMD产品智能客服示例）
-
-![应用创建界面](/images/fastgpt/app-create-interface.webp)
-
-**AI 配置**
-
-![AI 配置界面](/images/fastgpt/ai-config-interface.webp)
-
-**调试预览示例**: AMD9334 是 AMD ZEN4 产品的么？
-
-![调试预览结果](/images/fastgpt/debug-preview.webp)
-
-**保存应用**
-
-![应用保存成功](/images/fastgpt/app-save-success.webp)
-
-#### 4.4.4 发布渠道（外部调用 API）
-
-创建 FastGPT 应用 API 访问的 key
-
-![API Key 创建](/images/fastgpt/api-key-create.webp)
-
-### 4.5 项目接入 FastGPT 对话
-
-#### 4.5.1 环境准备
-
-::: tip 前置条件
-ruoyi-ai、ruoyi-admin、ruoyi-web 服务正常运行
-:::
-
-#### 4.5.2 ruoyi-admin 端配置系统模型
-
-成功登录：[http://localhost:5666/operate/model](http://localhost:5666/operate/model)
-
-在系统模型页配置 FastGPT 模型分类！
-
-![系统模型配置](/images/fastgpt/system-model-config.webp)
-
-**配置详情**
-
-![模型配置详情](/images/fastgpt/model-config-details.webp)
-
-#### 4.5.3 ruoyi-web 端进行对话
-
-成功登录：[http://localhost:1002](http://localhost:1002)
-
-**配置模型切换**
-
-::: warning 注意
-这里模型为 admin 端配置的模型描述，是个小 bug，后续优化
-:::
-
-![模型切换配置](/images/fastgpt/model-switch-config.webp)
-
-**提问测试**
-
-**测试问题示例**：
-- Ryzen 9 7950X 的最大加速频率是多少
-- AMD PRO 商用平台技术包括哪些
-
-![对话测试结果](/images/fastgpt/chat-test-result.webp)
-
-::: tip 说明
-当前在 ruoyi-web 响应结构需要优化，当前教程重在演示集成 FastGPT 操作步骤！
-:::
-
-#### 4.5.4 检查 FastGPT 端日志记录
-
-登录 [http://192.168.1.126:3000/](http://192.168.1.126:3000/)，查看对话日志，成功接入调用 FastGPT 端
-
-![FastGPT 日志记录](/images/fastgpt/fastgpt-logs.webp)
-
-### 4.6 接入 FastGPT 源码说明
-
-在 ruoyi-ai 项目 master 分支中已经合并了开发提的 pr，在此感谢开发者 @龙卷风 对 ruoyi-ai 项目的大力支持！🙏
-
-![源码贡献记录](/images/fastgpt/source-contribution.webp)
-
----
-
-## 总结
-
-| 平台 | 特点 | 适用场景 |
-|------|------|--------|
-| **通用模型** | 支持OpenAI、DeepSeek等上百个大模型 | 通用对话、文本生成 |
-| **Dify** | 工作流编排、可视化配置 | 复杂业务流程、企业应用 |
-| **Coze** | 字节跳动产品、Bot框架完整 | 智能机器人、多渠道部署 |
-| **FastGPT** | 知识库导向、RAG优化 | 企业知识库、FAQ系统 |
-
-根据你的需求选择合适的平台进行集成，充分利用 RuoYi AI 平台的模型管理能力！
+.platforms-guide .vp-doc p code,
+.platforms-guide .vp-doc li code {
+  overflow-wrap: anywhere;
+}
+</style>

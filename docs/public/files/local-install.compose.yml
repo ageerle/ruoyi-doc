@@ -1,0 +1,73 @@
+name: ruoyi-local
+
+# Local source development only. Start the Java backend and both frontends separately.
+# Bind published ports to loopback so these development services stay on this computer.
+services:
+  mysql:
+    image: mysql:8.0.33
+    container_name: ruoyi-local-mysql
+    ports:
+      - "127.0.0.1:3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${LOCAL_MYSQL_PASSWORD:?Set LOCAL_MYSQL_PASSWORD in .env}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --lower-case-table-names=1
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --protocol=tcp -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  redis:
+    image: redis:6.2
+    container_name: ruoyi-local-redis
+    ports:
+      - "127.0.0.1:6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+
+  # Optional: start these services when you need knowledge-base document upload and RAG.
+  weaviate:
+    image: semitechnologies/weaviate:1.30.0
+    container_name: ruoyi-local-weaviate
+    ports:
+      - "127.0.0.1:28080:8080"
+    environment:
+      QUERY_DEFAULTS_LIMIT: 25
+      AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED: "true"
+      PERSISTENCE_DATA_PATH: /var/lib/weaviate
+      DEFAULT_VECTORIZER_MODULE: none
+      CLUSTER_HOSTNAME: node1
+    volumes:
+      - weaviate-data:/var/lib/weaviate
+
+  minio:
+    image: minio/minio
+    container_name: ruoyi-local-minio
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9090:9090"
+    environment:
+      MINIO_ROOT_USER: ruoyi
+      MINIO_ROOT_PASSWORD: ${LOCAL_MINIO_PASSWORD:?Set LOCAL_MINIO_PASSWORD in .env}
+    command: ["server", "/data", "--console-address", ":9090"]
+    volumes:
+      - minio-data:/data
+
+volumes:
+  mysql-data:
+  redis-data:
+  weaviate-data:
+  minio-data:

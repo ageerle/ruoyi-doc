@@ -1,0 +1,16 @@
+# Load alongside the existing application configuration; do not replace the master datasource.
+# From the backend root after Local Installation; retain your existing profile and config files.
+# java -jar ruoyi-admin/target/ruoyi-admin.jar --spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml,file:./agent-report-demo.yml
+spring:
+  datasource:
+    dynamic:
+      strict: true
+      datasource:
+        agent:
+          type: com.zaxxer.hikari.HikariDataSource
+          driver-class-name: com.mysql.cj.jdbc.Driver
+          url: ${AGENT_DB_URL}
+          username: ${AGENT_DB_USERNAME}
+          password: ${AGENT_DB_PASSWORD}
+
+AGENT_ALLOWED_TABLES: demo_agent_sales_order
