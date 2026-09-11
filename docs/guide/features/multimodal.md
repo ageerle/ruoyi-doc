@@ -16,9 +16,45 @@ RuoYi AI 提供图片生成、语音合成和视频生成的接口，并在用�
 | **视频生成（文生视频）** | 输入场景与镜头描述，创建视频任务，再查询生成结果。 | 媒体工作台的 **视频生成**，或 `POST /media/video`。 |
 | **任务查询与结果预览** | 查询异步任务的进度，预览图片、播放音视频，并保存结果或任务 ID。 | 工作台的结果区、**本次任务**和**查询已有任务**。 |
 
-上述页面和接口已有实现，**实际生成前仍需补齐后端媒体凭据接入，并配置可用的厂商与模型**，详见[调用前的接入条件](#credential-readiness)。可选参数和任务查询方式也取决于所用服务，配置媒体模型时需要一起确认。
+使用 Atlas Cloud 前，需配置启用的 `atlas` 厂商、媒体模型和后端环境变量，详见[调用前的接入条件](#credential-readiness)与[媒体效果示例](#media-examples)。可选参数和任务查询方式也取决于所用服务，配置媒体模型时需要一起确认。
 
 普通聊天中的图片附件目前只支持本地预览，尚未接通看图问答或 OCR；媒体工作台也暂不提供参考图上传和图片编辑。相关说明见[聊天附件与扩展](#chat-attachments)。
+
+## 媒体效果示例 {#media-examples}
+
+媒体工作台可以预览生成的图片、播放语音和视频，并通过任务 ID 查询已有作品。以下以 Atlas Cloud 模型展示三类媒体的使用效果。
+
+| 能力 | 示例模型 | 结果形式 |
+| --- | --- | --- |
+| 图片生成 | `openai/gpt-image-2/text-to-image` | 图片预览与文件保存，示例尺寸为 1024×1024 |
+| 语音合成 | `bytedance/seed-audio-1.0` | MP3 播放器，支持播放、暂停和进度跳转 |
+| 视频生成 | `bytedance/seedance-2.0/text-to-video` | 视频播放器，支持播放、暂停、进度跳转和全屏 |
+
+**图片生成**
+
+完成后，图片显示在结果区，可点击“保存文件”下载。
+
+![Atlas GPT Image 2 图片预览](/images/multimodal/atlas-image-fixed-20260910.png)
+
+**语音合成**
+
+音频加载后，播放器显示总时长，可播放、暂停或拖动进度条。
+
+![Seed Audio 语音播放器](/images/multimodal/atlas-audio-fixed-20260910.png)
+
+**视频生成**
+
+任务完成并加载资源后，可在结果区播放视频或全屏查看。
+
+![Seedance 视频播放器](/images/multimodal/atlas-video-fixed-20260910.png)
+
+**查询已有任务**
+
+选择创建任务时使用的媒体类型和模型，展开“查询已有任务”，输入任务 ID 后点击“查询任务”。完成的作品会重新加载到结果区。
+
+![通过任务 ID 查询并播放已有视频](/images/multimodal/atlas-video-requery-fixed-20260910.png)
+
+资源链接可能过期，需要长期保留的作品请及时保存。预览文件大小和支持的资源域名见[资源交付接口](#media-content)。
 
 ## 理解多模态与媒体生成 {#concepts}
 
@@ -45,7 +81,7 @@ pnpm install
 pnpm run dev:antd
 ```
 
-将项目路径替换成你的目录，已安装依赖时可以跳过 `pnpm install`。打开终端显示的地址，默认是 [http://localhost:5666](http://localhost:5666)，登录后进入 **对话管理 → 模型管理**。管理端开发代理默认连接 `http://127.0.0.1:6039`，后面的接口示例也使用这个后端地址。
+将项目路径替换成你的目录，已安装依赖时可以跳过 `pnpm install`。打开终端显示的地址，默认是 [http://localhost:5666](http://localhost:5666)，登录后进入 **对话管理 → 模型管理**。管理端开发代理默认连接 `http://127.0.0.1:6039`，本页接口示例使用临时端口 `6049`，启动方式见[临时端口](#temporary-port)。
 
 先搜索要使用的模型，确认是否已有配置。下面以本地已有的 Atlas Cloud 图片模型为例，说明列表中的字段；实际使用时搜索你接入的模型名称：
 
@@ -74,28 +110,42 @@ pnpm run dev:antd
 
 ### 2.2 调用前的接入条件 {#credential-readiness}
 
-向服务商准备好 API 地址、真实模型 ID 和有相应媒体权限的密钥后，还需要确认后端能按该厂商读取密钥。
+Atlas Cloud 使用以下配置，三类媒体模型共用同一个环境变量引用：
 
-::: warning 当前代码还需要补齐媒体凭据接入
+| 配置项 | 值 |
+| --- | --- |
+| 厂商编码 | `atlas`，厂商必须启用 |
+| 请求地址 | `https://api.atlascloud.ai/v1` |
+| 模型密钥字段 | `env:ATLAS_API_KEY`，不填写真实 Key |
+| 后端环境变量 | `ATLAS_API_KEY`，值为 Atlas 控制台创建的有效 Key |
 
-模型保存要求使用受信任的环境变量引用，不能在“密钥”中直接填写真实 Key。现有凭据策略已处理 DeepSeek、PPIO 和两种自定义聊天协议，但尚未为 `openai`、`atlas`、`Tongyiwanx` 建立对应的凭据规则。
+`ChatModelCredentialPolicy` 在保存及调用时都会校验厂商、模型 ID、地址和密钥引用。Atlas 只允许官方 `https://api.atlascloud.ai` 地址，可带 `/v1` 或 `/api/v1`，均可带结尾 `/`；不允许自定义域名、端口、查询参数或其他厂商的密钥引用。适配器会拼接到 `/api/v1/model/...`。
 
-另外，`custom_api` 的媒体请求会进入 `openai` 适配器；适配器以 `openai` 身份读取密钥，与模型保存的 `custom_api` 编码不一致，会被校验拒绝。因此，仅选择“自定义 OpenAI”并填写 API Host，还不能完成媒体调用。
+真实 Key 注入 **Java 后端进程的环境变量**，可使用 IDE 运行配置或容器环境设置，修改后重启后端。不要写入版本库、前端 `.env` 或截图。`ruoyi-web` 的环境变量只用于前端配置，不会给 Java 提供密钥。
 
+::: warning 其他厂商的接入范围
+本页配置示例使用 `atlas`。`openai`、`Tongyiwanx` 的媒体凭据规则需要独立配置；`custom_api` 媒体回退到 `openai` 时，凭据消费身份不匹配，不能直接复用 Atlas 的配置。
 :::
 
-如果你正在开发媒体功能，先完成以下接入，再执行后面的生成请求：
+### 2.3 使用临时端口启动 {#temporary-port}
 
-1. 在 `ChatModelSecretReference` 中定义该媒体厂商允许使用的环境变量引用。
-2. 在 `ChatModelCredentialPolicy` 中补齐保存和调用时的厂商、地址、模型、密钥引用校验，将凭据绑定到实际使用它的服务地址。
-3. 使用自定义 OpenAI 媒体服务时，让适配器按配置的协议身份读取凭据，并沿用对应的地址绑定规则。
-4. 为有效配置、错误地址、错误厂商和缺失环境变量验证行为，再重新构建并启动后端。
+当默认 `6039` 已被占用时，通过启动参数改为 `6049`，无需改动项目默认端口。先在运行环境配置 `ATLAS_API_KEY`，然后：
 
-引用的格式是 `env:变量名`。例如已有的自定义聊天配置使用 `env:CUSTOM_OPENAI_API_KEY`，后端读取的是进程环境中的 `CUSTOM_OPENAI_API_KEY`。媒体厂商也需要先在代码中明确允许的变量名，再按同样格式填写。
+```powershell
+Set-Location D:\Project\github\ruoyi-ai
+mvn -pl ruoyi-admin -am package -Dmaven.test.skip=true
+java -jar ruoyi-admin/target/ruoyi-admin.jar --server.port=6049 --spring.data.redis.database=14 --snail-job.enabled=false
+```
 
-真实 Key 配置到 **Java 后端进程的环境变量**：本地开发可在 IDE 的运行配置中设置，容器部署则通过容器环境注入。设置后重新启动后端，在模型表单中只填写引用。将变量写入 `ruoyi-web` 的 `.env` 不会提供给后端，也不应把厂商 Key 放入前端构建配置。
+后端的 MySQL 连接和 Redis DB 需按实际环境配置。示例使用 Redis DB `14` 隔离缓存，请先确认该数据库可用。用户端在另一个终端启动：
 
-这部分是继续接入需要完成的代码工作。初始化 SQL 中的占位密钥、已有模型记录以及表单中的空密钥框，都不能证明已经具备调用条件。
+```powershell
+Set-Location D:\Project\github\ruoyi-web
+$env:VITE_API_URL = 'http://127.0.0.1:6049'
+pnpm dev --host 127.0.0.1 --port 5180 --strictPort
+```
+
+访问 [http://127.0.0.1:5180/media](http://127.0.0.1:5180/media)，登录后开始测试。`VITE_API_URL` 指向后端地址，本页后续接口示例使用 `6049`。若同时运行管理端，也需把其开发代理指向该端口；管理端默认代理仍为 `6039`。
 
 ## 3. 在字典和模型管理中完成配置 {#configure-model}
 
@@ -128,10 +178,10 @@ pnpm run dev:antd
 | 模型名称 | `openai/gpt-image-2/text-to-image` | 使用你实际接入服务的模型 ID，接口请求中的 `model` 也填这个值。 |
 | 模型描述 | GPT-IMAGE-2 文生图 | 用于页面展示，不代替接口中的模型名称。 |
 | 请求地址 | `https://api.atlascloud.ai/v1` | 填服务的基础地址；后端根据适配器拼接调用路径。 |
-| 密钥 | 编辑页不回显 | 完成媒体凭据接入后，填写该厂商允许的环境变量引用。 |
+| 密钥 | 编辑页不回显 | Atlas 填 `env:ATLAS_API_KEY`。 |
 | 备注 | 模型用途说明 | 便于维护，不会变成生成请求参数。 |
 
-选择普通厂商时，表单会把厂商地址带入模型；之后修改厂商地址，需要同时检查已有模型的请求地址。完成凭据接入后再保存有效配置，返回列表核对供应商、分类和模型名称。
+选择普通厂商时，表单会把厂商地址带入模型；之后修改厂商地址，需要同时检查已有模型的请求地址。配置后端环境变量并保存有效配置，返回列表核对供应商、分类和模型名称。
 
 ::: details 请求地址如何变成实际接口地址
 
@@ -160,14 +210,15 @@ pnpm run dev:antd
 ```powershell
 Set-Location D:\Project\github\ruoyi-web
 pnpm install
-pnpm run dev --port 5180
+$env:VITE_API_URL = 'http://127.0.0.1:6049'
+pnpm run dev --host 127.0.0.1 --port 5180 --strictPort
 ```
 
 打开 [http://localhost:5180/media](http://localhost:5180/media)，或登录用户端后点击左侧的 **媒体工作台**。未登录时页面会提示登录，登录后自动加载模型。
 
 顶部有 **图片生成、语音合成、视频生成** 三个入口，分别读取 `image`、`audio`、`video` 分类的模型。刚在管理端保存配置时，点击 **刷新模型** 即可重新加载。没有可用模型时，页面会提示管理员检查对应分类和厂商状态。
 
-工作台负责填写参数、提交任务和展示结果，服务商地址与密钥仍由后端读取。开始生成前，需要完成[媒体凭据接入](#credential-readiness)。
+工作台负责填写参数、提交任务和展示结果，服务商地址与密钥仍由后端读取。开始生成前，需要完成[厂商与环境变量配置](#credential-readiness)。
 
 ### 4.2 生成一张图片
 
@@ -210,7 +261,7 @@ pnpm run dev --port 5180
 
 ![真实媒体工作台请求结果，后端拒绝生成请求后显示未完成和错误信息](/images/multimodal/workbench-request-result.png)
 
-当前后端的媒体凭据策略仍需补齐。遇到这类通用错误时，先核对[凭据接入条件](#credential-readiness)和服务端日志；不要连续点击生成来重试同一配置问题。
+上图为补齐 Atlas 凭据接入前的历史错误示例。遇到这类通用错误时，先核对[凭据接入条件](#credential-readiness)和服务端日志；不要连续点击生成来重试同一配置问题。
 
 ### 4.5 保存任务 ID，继续查看已有任务
 
@@ -260,24 +311,18 @@ const { data } = await generateImage({
 
 下面的 `<ACCESS_TOKEN>` 是 **RuoYi AI 登录令牌**，`<CLIENT_ID>` 使用同一登录客户端的值。它们与服务商的媒体 Key 用途不同；调用 `/media/*` 时，服务商凭据由后端读取。
 
-先发一个空提示词或负数种子的请求，检查登录、代理和参数校验是否到达后端。本地运行结果如下，均在调用外部服务之前被拒绝：
+请求会先检查登录身份、必填字段、参数范围和模型分类。`prompt` 不能为空，`seed` 不能为负数，图片接口需要使用分类为 `image` 的模型。
 
-| 测试输入 | HTTP 状态 | 响应中的 `code` / `msg` |
-| --- | --- | --- |
-| 图片请求的 `prompt` 为空 | `200` | `500` / 请求参数校验失败 |
-| 图片请求的 `seed` 为 `-1` | `200` | `500` / 请求参数校验失败 |
-| 图片请求使用聊天模型 `deepseek-v4-flash` | `200` | `500` / 系统异常，请联系管理员 |
+**HTTP 200 不等于生成成功，还要检查响应体中的 `code`。** 非成功响应应读取 `msg`；若只返回通用提示，可结合服务端日志定位原因。
 
-**HTTP 200 不等于生成成功，还要检查响应体。** 当前统一异常处理可能只返回通用提示；最后一项在控制器中的检查是模型分类不匹配，定位具体原因时需要查看服务端日志。
-
-下面的请求展示公共接口的填写方式。真实生成需要先完成[媒体凭据接入](#credential-readiness)，并将模型名和可选参数替换为你已验证的配置。
+下面的请求展示公共接口的填写方式。Atlas 生成需要先完成[厂商与环境变量配置](#credential-readiness)，并将模型名和可选参数替换为你已验证的配置。
 
 ### 5.2 生成图片 {#generate-image}
 
 在接口工具中创建下面的 HTTP 请求：
 
 ```http
-POST http://127.0.0.1:6039/media/image
+POST http://127.0.0.1:6049/media/image
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 Content-Type: application/json
@@ -290,7 +335,7 @@ Content-Type: application/json
 
 `model` 和 `prompt` 必填。需要控制尺寸时添加 `size`，格式以所选模型和适配器为准，例如 OpenAI 实现使用的 `1024x1024` 与万相 SDK 使用的 `1280*1280` 不应混用。`seed` 是可选整数，范围为 `0` 到 `2147483647`；OpenAI 图片实现遇到名称包含 `gpt-image` 的模型时会忽略它。
 
-响应数据在 `data` 中。同步结果可能返回 `url`，也可能返回 `b64Json` 和可直接预览的 `dataUrl`；Atlas 也可能返回任务 `id` 和 `status`，这时继续查询任务。
+响应数据在 `data` 中。同步结果可能返回 `url`，也可能返回 `b64Json` 和可直接预览的 `dataUrl`；Atlas 工作台请求采用异步提交，返回任务 `id` 和 `status` 后，通过 Prediction 接口查询结果。
 
 公共 `/media/image` 请求目前没有参考图字段。它不能直接用于图生图、图片编辑，也不会读取模型备注中的“三视图、角色设定”等描述作为额外参数。
 
@@ -300,14 +345,14 @@ Content-Type: application/json
 
 ```json
 {
-  "model": "替换为已配置的语音模型名称",
+  "model": "bytedance/seed-audio-1.0",
   "input": "欢迎使用 RuoYi AI。"
 }
 ```
 
 `model`、`input` 必填。可选字段为 `voice`、`responseFormat`、`speed`、`instructions`，先用最小请求验证，再按服务能力添加。
 
-OpenAI 语音实现默认使用 `voice=alloy`、`responseFormat=mp3`，返回音频 Base64 和 `dataUrl`。Atlas 音频走异步任务。当前公共 DTO 没有多角色参考音频、采样率等字段，内部业务服务支持的参数不能直接照搬到这个接口。
+OpenAI 语音实现默认使用 `voice=alloy`、`responseFormat=mp3`，返回音频 Base64 和 `dataUrl`。Atlas 音频走异步任务。`bytedance/seed-audio-1.0` 默认输出 MP3；公共字段 `speed`、`instructions` 当前未映射到 Atlas 参数，`voice` 会作为 `references[].speaker` 传入，不能照搬 OpenAI 音色名。当前公共 DTO 没有多角色参考音频、采样率等字段，内部业务服务支持的参数不能直接照搬到这个接口。
 
 ### 5.4 创建视频并查询结果
 
@@ -316,14 +361,15 @@ OpenAI 语音实现默认使用 `voice=alloy`、`responseFormat=mp3`，返回音
 ```json
 {
   "model": "bytedance/seedance-2.0/text-to-video",
-  "prompt": "镜头缓慢推进，展示桌面上的一本书，柔和自然光"
+  "prompt": "镜头缓慢推进，展示桌面上的一本书，柔和自然光",
+  "seconds": 4
 }
 ```
 
-`model`、`prompt` 必填；`size`、`seconds`、`quality` 可选，取值需要符合所选模型。创建后保存返回的 `data.id` 和使用的模型名称，用它们查询结果：
+`model`、`prompt` 必填；`size`、`seconds`、`quality` 可选，取值需要符合所选模型。Seedance 示例设置 `seconds=4`，画面与画质留空。Atlas 视频适配器把 `size`、`quality` 原样发送，尚未映射为 Seedance 的 `aspect_ratio`、`resolution`，因此不要使用这两个字段控制 Seedance 的宽高比和分辨率。创建后保存返回的 `data.id` 和使用的模型名称，用它们查询结果：
 
 ```http
-GET http://127.0.0.1:6039/media/video?model=<URL编码后的模型名称>&videoId=<任务ID>
+GET http://127.0.0.1:6049/media/video?model=<URL编码后的模型名称>&videoId=<任务ID>
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 ```
@@ -335,7 +381,7 @@ Clientid: <CLIENT_ID>
 Atlas 的图片、音频和视频任务还可以使用通用查询入口：
 
 ```http
-GET http://127.0.0.1:6039/media/prediction?model=<URL编码后的Atlas模型名称>&predictionId=<任务ID>
+GET http://127.0.0.1:6049/media/prediction?model=<URL编码后的Atlas模型名称>&predictionId=<任务ID>
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 ```
@@ -369,11 +415,25 @@ Clientid: <CLIENT_ID>
 | `lastFrameUrl` | Atlas 视频可能返回的末帧地址，前端类型已声明，基础工作台暂不单独展示。 |
 | `rawResponse` | 厂商原始响应，供服务端定位协议问题；业务页面展示处理后的状态和结果即可。 |
 
-Atlas 通用查询目前把 `image` 以外的分类映射为 `video` / `video/mp4`，后端音频类型处理仍需补齐。工作台对链接结果使用创建任务时的媒体分类，音频仍用 `<audio>` 播放，避免被错误渲染成视频。
+Atlas 通用查询按模型分类返回 `image`、`audio`、`video`。默认 MP3 音频返回 `audio/mpeg`；WAV、OGG 链接按扩展名返回对应 MIME。查询不存在的音频任务时，也保留音频类型和任务 ID。
 
 OpenAI 视频实现目前只提取任务响应中的 `url` 或 `data[0].url`。对接官方 Videos 接口时，还需要补上[视频内容下载](https://developers.openai.com/api/reference/resources/videos/methods/download_content)，将下载结果转换为前端可访问的资源；任务状态为 `completed`，不代表当前适配器一定能取得播放地址。
 
 :::
+
+### 5.6 获取可预览的媒体资源 {#media-content}
+
+Atlas 任务完成后，工作台自动调用以下接口：
+
+```http
+GET http://127.0.0.1:6049/media/content?model=<URL编码后的Atlas模型名称>&predictionId=<任务ID>
+Authorization: Bearer <ACCESS_TOKEN>
+Clientid: <CLIENT_ID>
+```
+
+成功时直接返回媒体二进制、真实 `Content-Type`、`Content-Disposition: inline` 与 `Cache-Control: no-store`，不是 `R` JSON。失败仍按项目统一错误响应处理。前端带登录请求头获取 Blob，再创建临时 URL 供图片与播放器使用，登录令牌不放入 URL。音视频完整加载后可播放和跳转进度，“保存文件”使用同一份已加载资源。
+
+当前单个资源上限 **64 MiB**，服务端和浏览器在内存中加载文件，不持久化到自有存储。仅允许 HTTPS 默认端口的 `atlas-media.oss-us-west-1.aliyuncs.com` 和视频资源域名 `ark-acg-ap-southeast-1.tos-ap-southeast-1.volces.com`，不跟随重定向。其他输出域名、超大文件或服务商已过期资源需要另行适配，不能直接填入任意 URL 绕过校验。生成成功但资源加载失败时，可点击“重新加载资源”，无需重新付费生成。
 
 ## 6. 继续开发时从哪里入手 {#implementation}
 
@@ -393,14 +453,17 @@ OpenAI 视频实现目前只提取任务响应中的 `url` 或 `data[0].url`。�
 
 ```java
 ChatModelVo model = loadModel(request.getModel(), ModelType.IMAGE.getKey());
-String result = imageServiceFactory.getOriginalService(model.getProviderCode())
-    .generateImage(ImageContext.builder()
-        .chatModelVo(model)
-        .prompt(request.getPrompt())
-        .size(request.getSize())
-        .seed(request.getSeed())
-        .build());
-return R.ok(toImageResponse(result));
+ImageContext context = ImageContext.builder()
+    .chatModelVo(model)
+    .prompt(request.getPrompt())
+    .size(request.getSize())
+    .seed(request.getSeed())
+    .build();
+var service = imageServiceFactory.getOriginalService(model.getProviderCode());
+if ("atlas".equals(model.getProviderCode())) {
+    return R.ok(service.startImageGeneration(context));
+}
+return R.ok(toImageResponse(service.generateImage(context)));
 ```
 
 它先用模型名称读取配置并检查分类，再按厂商编码选实现，最后转换结果。新增媒体厂商时，需要同时接好厂商选项、凭据规则、媒体服务实现和结果解析；只增加一个下拉选项还不够。
@@ -432,17 +495,11 @@ return R.ok(toImageResponse(result));
 | 外部服务返回鉴权失败 | 确认请求已经到达服务商，再检查媒体 Key、服务权限和账户状态。 |
 | 外部服务返回 `404` | 根据实际适配器检查基础地址与拼接路径；Atlas 查询过期任务的 `404` 会转换为失败状态。 |
 | 只有任务 ID，没有资源地址 | 查询任务状态，等待完成；失败或超时后停止轮询并保留错误信息。 |
+| 任务已完成，但资源加载失败 | 检查登录身份、资源域名、文件大小和有效期，再点击“重新加载资源”；见[资源交付接口](#media-content)。 |
 | `code=200` 但没有图片或音视频 | 继续检查 `data.status`、`data.url`、`data.dataUrl` 和服务端异常，不能直接视为生成成功。 |
 | 普通聊天中找不到媒体模型，或附件没有被理解 | 聊天列表默认只查询 `chat`，附件目前只预览。生成媒体请使用左侧的“媒体工作台”，聊天图片理解仍需单独接入。 |
 | 工作台暂无模型或模型加载失败 | 检查对应分类、厂商启用状态、账号的模型列表权限，并点击“刷新模型”。 |
 | 工作台任务查询已暂停 | 可能是手动暂停、查询失败、未知状态或达到 10 分钟上限；保留任务 ID，排查后继续查询。 |
-
-<details id="verification-notes">
-<summary>本页截图与验证说明</summary>
-
-截图来自本地实际运行的管理端和用户端，展示已有配置、媒体工作台、真实请求错误和聊天附件预览。工作台的成功展示与异步处理已通过模拟接口回归验证；文档截图没有将模拟响应作为外部服务生成成功结果。
-
-</details>
 
 <style>
 .multimodal-guide .vp-doc table {

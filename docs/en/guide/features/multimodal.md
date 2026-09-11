@@ -16,9 +16,45 @@ RuoYi AI provides image generation, text-to-speech, and video generation APIs, w
 | **Video generation** | Submit a scene and camera description, then query the generated video. | **Video generation** or `POST /media/video`. |
 | **Task lookup and previews** | Check asynchronous progress, preview images, play audio/video, and save results or task IDs. | Result panel, **Current tasks**, and **Query existing task**. |
 
-The pages and APIs exist, but **actual generation still requires backend media-credential integration and a usable provider/model configuration**. See [Credential requirements](#credential-readiness). Optional parameters and query methods also depend on the provider.
+Configure an enabled `atlas` provider, media models, and the backend environment variable before using Atlas Cloud. See [Credential requirements](#credential-readiness) and [Media examples](#media-examples). Optional parameters and query methods also depend on the provider.
 
 Image attachments in ordinary chat currently support only local previews, without image understanding or OCR. The workspace does not yet offer reference-image uploads or image editing. See [Chat attachments and extension](#chat-attachments).
+
+## Media examples {#media-examples}
+
+The Media Workspace previews generated images, plays audio and video, and retrieves existing outputs by task ID. These examples use Atlas Cloud models.
+
+| Capability | Example model | Output |
+| --- | --- | --- |
+| Image generation | `openai/gpt-image-2/text-to-image` | Image preview and file download; the example is 1024×1024 |
+| Text-to-speech | `bytedance/seed-audio-1.0` | MP3 player with playback, pause, and seeking |
+| Video generation | `bytedance/seedance-2.0/text-to-video` | Video player with playback, pause, seeking, and fullscreen |
+
+**Image generation**
+
+The completed image appears in the result panel. Choose Save File to download it.
+
+![Atlas GPT Image 2 image preview](/images/multimodal/atlas-image-fixed-20260910.png)
+
+**Text-to-speech**
+
+Once the audio loads, the player shows its duration and supports playback, pause, and seeking.
+
+![Seed Audio speech player](/images/multimodal/atlas-audio-fixed-20260910.png)
+
+**Video generation**
+
+Once the task completes and the resource loads, play the video in the result panel or open it fullscreen.
+
+![Seedance video player](/images/multimodal/atlas-video-fixed-20260910.png)
+
+**Query an existing task**
+
+Choose the media type and model used to create the task, expand Query Existing Task, enter the task ID, and select Query Task. Completed output loads into the result panel.
+
+![Querying and playing an existing video by task ID](/images/multimodal/atlas-video-requery-fixed-20260910.png)
+
+Resource URLs can expire. Save files you want to keep. See [content delivery](#media-content) for size and resource-host limits.
 
 ## Multimodality and media generation {#concepts}
 
@@ -43,7 +79,7 @@ pnpm install
 pnpm run dev:antd
 ```
 
-Replace the path and skip dependency installation if already complete. Open the terminal's URL, normally [http://localhost:5666](http://localhost:5666), and go to **Chat Management → Model Management**. The development proxy and API examples use backend `http://127.0.0.1:6039`.
+Replace the path and skip dependency installation if already complete. Open the terminal's URL, normally [http://localhost:5666](http://localhost:5666), and go to **Chat Management → Model Management**. The admin proxy defaults to `http://127.0.0.1:6039`; the API examples use temporary port `6049`. See [Temporary port](#temporary-port).
 
 Search for the model you intend to use before adding a new record. This existing Atlas Cloud model illustrates the fields:
 
@@ -72,26 +108,33 @@ If Atlas Cloud is missing, check for an enabled `atlas` provider in the current 
 
 ### 2.2 Requirements before calling a provider {#credential-readiness}
 
-Obtain the API address, actual model ID, and a key authorized for media, then ensure the backend can resolve credentials for that provider.
+For Atlas Cloud, use provider `atlas`, base URL `https://api.atlascloud.ai/v1`, and model credential `env:ATLAS_API_KEY`. Inject the actual key into the **Java process environment** as `ATLAS_API_KEY`, then restart Java. Never put it into the frontend environment, source control, or screenshots.
 
-::: warning Media credentials still require implementation
-Model saving requires a trusted environment-variable reference rather than a plaintext key. Existing rules cover DeepSeek, PPIO, and the two custom chat protocols, but not `openai`, `atlas`, or `Tongyiwanx` media credentials.
+Save-time and call-time checks bind this reference to the Atlas provider and official HTTPS origin. Allowed base paths are empty, `/v1`, and `/api/v1`, with an optional trailing slash. Custom domains, ports, query parameters, and other providers' references are rejected.
 
-Also, `custom_api` media requests fall back to an adapter that resolves credentials as `openai`. That differs from the configured `custom_api` provider and fails validation. Selecting Custom OpenAI and entering an API host is therefore insufficient.
+::: warning Other providers
+The configuration examples use `atlas`. `openai` and `Tongyiwanx` require their own media credential configuration. The `custom_api` media fallback has a credential-consumer mismatch with `openai`; Atlas settings cannot be reused directly.
 :::
 
-Before testing generation, implement:
+### 2.3 Start on a temporary port {#temporary-port}
 
-1. Allowed provider-specific references in `ChatModelSecretReference`.
-2. Save-time and call-time checks in `ChatModelCredentialPolicy` for provider, address, model, and reference, binding credentials to the consuming service address.
-3. Credential resolution under the configured protocol identity for custom OpenAI media, retaining the appropriate address binding.
-4. Checks for valid configurations, wrong addresses/providers, and missing variables; then rebuild and restart Java.
+With `ATLAS_API_KEY` already set in the launch environment, run:
 
-References have the form `env:VARIABLE_NAME`. Existing custom chat, for example, uses `env:CUSTOM_OPENAI_API_KEY`, resolved from the Java environment. Media providers need their allowed names defined in code first.
+```powershell
+Set-Location D:\Project\github\ruoyi-ai
+mvn -pl ruoyi-admin -am package -Dmaven.test.skip=true
+java -jar ruoyi-admin/target/ruoyi-admin.jar --server.port=6049 --spring.data.redis.database=14 --snail-job.enabled=false
+```
 
-Put real keys in the **Java process's environment**, through IDE launch settings or container variables, and restart the backend. Enter only the reference in model forms. A `ruoyi-web` `.env` does not supply the backend and should not contain provider keys.
+Configure the MySQL connection and Redis database for your environment. The example uses Redis DB `14` to isolate its cache; confirm that database is available. In another terminal:
 
-These are implementation requirements. Initialization placeholders, existing model rows, and empty key fields do not establish readiness.
+```powershell
+Set-Location D:\Project\github\ruoyi-web
+$env:VITE_API_URL = 'http://127.0.0.1:6049'
+pnpm dev --host 127.0.0.1 --port 5180 --strictPort
+```
+
+Open [the local workspace](http://127.0.0.1:5180/media). This leaves the default backend port unchanged. If also running the admin app, point its development proxy at `6049`.
 
 ## 3. Configure categories and models {#configure-model}
 
@@ -124,10 +167,10 @@ Return to **Chat Management → Model Management** and edit an existing row or a
 | Model name | `openai/gpt-image-2/text-to-image` | Actual service model ID, also sent as request `model`. |
 | Description | GPT-IMAGE-2 text-to-image | Display name; does not replace the API model name. |
 | Request address | `https://api.atlascloud.ai/v1` | Base URL; the adapter constructs the endpoint. |
-| Key | Not returned in the edit form | An allowed environment reference after implementing media credentials. |
+| Key | Not returned in the edit form | Use `env:ATLAS_API_KEY` for Atlas. |
 | Notes | Model-purpose description | Maintenance text, not generation parameters. |
 
-Selecting a regular provider copies its address into the model form. If the provider address changes later, check existing model addresses too. Complete credential integration before saving a usable configuration, then verify provider, category, and model name in the list.
+Selecting a regular provider copies its address into the model form. If the provider address changes later, check existing model addresses too. Configure the backend environment variable before saving a usable model, then verify provider, category, and model name in the list.
 
 ::: details How endpoints are constructed
 - OpenAI media uses `OpenAiMediaSupport.endpoint()` for `/v1/images/generations`, `/v1/audio/speech`, and `/v1/videos`, avoiding duplicate `/v1`.
@@ -154,14 +197,15 @@ Start the user frontend, using a separate port when the documentation site is ru
 ```powershell
 Set-Location D:\Project\github\ruoyi-web
 pnpm install
-pnpm run dev --port 5180
+$env:VITE_API_URL = 'http://127.0.0.1:6049'
+pnpm run dev --host 127.0.0.1 --port 5180 --strictPort
 ```
 
 Open [http://localhost:5180/media](http://localhost:5180/media), or select **Media Workspace** in the user app sidebar. Sign in when prompted; models load after login.
 
 The **Image generation**, **Speech synthesis**, and **Video generation** tabs load `image`, `audio`, and `video` models respectively. After saving a model in the admin console, click **Refresh models**. Empty lists prompt administrators to check category and provider status.
 
-The workspace collects parameters and displays tasks and results. The backend still supplies service addresses and keys. Complete [media credentials](#credential-readiness) before generating.
+The workspace collects parameters and displays tasks and results. The backend still supplies service addresses and keys. Configure [provider credentials](#credential-readiness) before generating.
 
 ### 4.2 Generate an image {#_4-2-生成一张图片}
 
@@ -204,7 +248,7 @@ Errors reflect actual responses. The local image request below returned backend 
 
 ![Actual failed generation request in the media workspace](/images/multimodal/workbench-request-result.png)
 
-The backend's media credential policy still needs completion. Check [credential readiness](#credential-readiness) and server logs for generic errors instead of repeatedly retrying the same configuration.
+Atlas media credential integration is now available. Check [credential readiness](#credential-readiness) and server logs for generic errors instead of repeatedly retrying the same configuration.
 
 ### 4.5 Save a task ID and resume an existing task {#_4-5-保存任务-id-继续查看已有任务}
 
@@ -253,24 +297,18 @@ Media APIs require a RuoYi AI login. In browser developer tools, inspect a succe
 
 `<ACCESS_TOKEN>` below is the **RuoYi AI login token**; `<CLIENT_ID>` belongs to that login client. They differ from provider media keys, which the backend resolves for `/media/*` requests.
 
-First send an empty prompt or negative seed to check authentication, proxying, and validation without calling a provider. Recorded results:
+Requests first validate authentication, required fields, parameter ranges, and model category. Image prompts must not be empty, seeds must not be negative, and image requests require a model in category `image`.
 
-| Test | HTTP | Response `code` / message |
-| --- | --- | --- |
-| Empty image `prompt` | `200` | `500` / parameter validation failed |
-| Image `seed=-1` | `200` | `500` / parameter validation failed |
-| Image request using chat model `deepseek-v4-flash` | `200` | `500` / generic system error |
+**HTTP 200 does not mean generation succeeded.** Inspect the response `code` and read `msg` on failure. Consult server logs if only a generic message is returned.
 
-**HTTP 200 does not mean generation succeeded.** Inspect the body. The last case is a category mismatch in the controller, but generic exception handling may hide the detail; consult server logs.
-
-The following requests show the public API format. Actual generation requires [credential integration](#credential-readiness), a verified model, and valid options.
+The following requests show the public API format. Atlas generation requires [provider and environment configuration](#credential-readiness), a verified model, and valid options.
 
 ### 5.2 Generate an image {#generate-image}
 
 Create this HTTP request in your API client:
 
 ```http
-POST http://127.0.0.1:6039/media/image
+POST http://127.0.0.1:6049/media/image
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 Content-Type: application/json
@@ -283,7 +321,7 @@ Content-Type: application/json
 
 `model` and `prompt` are required. Optional `size` must match the model and adapter: OpenAI's `1024x1024` and Wanxiang's `1280*1280` are not interchangeable. Optional integer `seed` ranges from `0` to `2147483647`; the OpenAI image adapter ignores it for names containing `gpt-image`.
 
-Response `data` may contain a synchronous `url`, `b64Json`, or directly previewable `dataUrl`. Atlas may instead return task `id` and `status`, requiring a query.
+Response `data` may contain a synchronous `url`, `b64Json`, or directly previewable `dataUrl`. Atlas image requests are asynchronous and return task `id` and `status` for subsequent lookup.
 
 `/media/image` has no reference-image field. It does not support image-to-image or editing and does not convert model notes into extra parameters.
 
@@ -300,7 +338,7 @@ Send this JSON to `POST /media/speech` with the same login headers:
 
 `model` and `input` are required. `voice`, `responseFormat`, `speed`, and `instructions` are optional. Verify a minimal request first.
 
-The OpenAI adapter defaults to `voice=alloy` and `responseFormat=mp3`, returning Base64 and `dataUrl`. Atlas audio is asynchronous. The public DTO has no multi-speaker reference audio or sample-rate fields; parameters from internal business services cannot simply be copied here.
+The OpenAI adapter defaults to `voice=alloy` and `responseFormat=mp3`, returning Base64 and `dataUrl`. Atlas audio is asynchronous. The `bytedance/seed-audio-1.0` model outputs MP3 by default. Public `speed` and `instructions` fields are not currently mapped to Atlas parameters; `voice` is sent as `references[].speaker`, so OpenAI voice names are not interchangeable. The public DTO has no multi-speaker reference audio or sample-rate fields; parameters from internal business services cannot simply be copied here.
 
 ### 5.4 Create and query a video {#_5-4-创建视频并查询结果}
 
@@ -316,7 +354,7 @@ Send to `POST /media/video` with the login headers:
 `model` and `prompt` are required; `size`, `seconds`, and `quality` must match the chosen model. Retain `data.id` and the model name for querying:
 
 ```http
-GET http://127.0.0.1:6039/media/video?model=<URL编码后的模型名称>&videoId=<任务ID>
+GET http://127.0.0.1:6049/media/video?model=<URL编码后的模型名称>&videoId=<任务ID>
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 ```
@@ -328,7 +366,7 @@ Clientid: <CLIENT_ID>
 Atlas image, audio, and video tasks also support generic lookup:
 
 ```http
-GET http://127.0.0.1:6039/media/prediction?model=<URL编码后的Atlas模型名称>&predictionId=<任务ID>
+GET http://127.0.0.1:6049/media/prediction?model=<URL编码后的Atlas模型名称>&predictionId=<任务ID>
 Authorization: Bearer <ACCESS_TOKEN>
 Clientid: <CLIENT_ID>
 ```
@@ -360,10 +398,24 @@ The Atlas code also handles `pending` and recognizes `succeeded` in video result
 | `lastFrameUrl` | Possible Atlas video final frame; typed in the frontend but not shown separately in the basic workspace. |
 | `rawResponse` | Original provider response for server-side protocol diagnosis. |
 
-Atlas generic lookup currently maps all non-image categories to `video` / `video/mp4`; backend audio handling still needs correction. For URL resources, the workspace uses the creation-time category so audio renders with `<audio>`.
+Atlas lookup preserves `image`, `audio`, and `video` categories. Default MP3 audio uses `audio/mpeg`; WAV and OGG links use the matching MIME type. Missing audio tasks also retain their audio category and task ID.
 
 The OpenAI video adapter only extracts `url` or `data[0].url`. The official Videos API also requires [content download](https://developers.openai.com/api/reference/resources/videos/methods/download_content) and conversion into a frontend-accessible resource. `completed` does not guarantee this adapter can obtain a playback URL.
 :::
+
+### 5.6 Fetch previewable media content {#media-content}
+
+Once an Atlas task completes, the workspace automatically calls:
+
+```http
+GET http://127.0.0.1:6049/media/content?model=<URL-encoded Atlas model>&predictionId=<task ID>
+Authorization: Bearer <ACCESS_TOKEN>
+Clientid: <CLIENT_ID>
+```
+
+Success returns binary media with its actual `Content-Type`, `Content-Disposition: inline`, and `Cache-Control: no-store`, not an `R` JSON envelope. Errors use the standard project error response. The frontend fetches with login headers and creates a temporary Blob URL; tokens never enter the URL. Audio/video can play and seek once loaded. Save File uses the same loaded bytes.
+
+Each resource is limited to **64 MiB** and loaded into server/browser memory, without persistent storage. Only HTTPS on the default port is allowed for `atlas-media.oss-us-west-1.aliyuncs.com` and the video resource host `ark-acg-ap-southeast-1.tos-ap-southeast-1.volces.com`; redirects are refused. Other hosts, larger files, and expired upstream resources need separate support. Retry resource loading without paying for another generation task.
 
 ## 6. Where to extend the implementation {#implementation}
 
@@ -383,14 +435,17 @@ The image path in `MediaGenerationController` follows these steps:
 
 ```java
 ChatModelVo model = loadModel(request.getModel(), ModelType.IMAGE.getKey());
-String result = imageServiceFactory.getOriginalService(model.getProviderCode())
-    .generateImage(ImageContext.builder()
-        .chatModelVo(model)
-        .prompt(request.getPrompt())
-        .size(request.getSize())
-        .seed(request.getSeed())
-        .build());
-return R.ok(toImageResponse(result));
+ImageContext context = ImageContext.builder()
+    .chatModelVo(model)
+    .prompt(request.getPrompt())
+    .size(request.getSize())
+    .seed(request.getSeed())
+    .build();
+var service = imageServiceFactory.getOriginalService(model.getProviderCode());
+if ("atlas".equals(model.getProviderCode())) {
+    return R.ok(service.startImageGeneration(context));
+}
+return R.ok(toImageResponse(service.generateImage(context)));
 ```
 
 It looks up the model, checks its category, selects an implementation by provider, and converts the result. A new media provider needs options, credential rules, service implementations, and result parsing together.
@@ -424,13 +479,6 @@ Coding Harness has its own image persistence and `ImageContent` construction. Us
 | Media models absent in chat or attachments ignored | Chat defaults to `chat` models and attachment previews only; use Media Workspace for generation. |
 | Workspace models missing or fail to load | Category, provider status, model-list permission, and **Refresh models**. |
 | Polling paused | Manual pause, query failure, unknown state, or the 10-minute limit; retain the ID and resume after diagnosis. |
-
-<details id="verification-notes">
-<summary>Screenshot and verification notes</summary>
-
-Screenshots show the locally running applications, existing settings, workspace forms, an actual request error, and chat attachment previews. Successful rendering and asynchronous handling were regression-checked with simulated APIs; those simulated responses are not presented as successful external generation screenshots.
-
-</details>
 
 <style>
 .multimodal-guide .vp-doc table {
