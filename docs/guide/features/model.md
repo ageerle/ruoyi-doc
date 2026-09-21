@@ -396,8 +396,6 @@ const options = [...getDictOptions(DictEnum.CHAT_MODEL_CATEGORY)];
 
 真实 Key 统一在 **ruoyi-admin → 模型管理** 中配置。编辑时留空保留原 Key，填写新值会替换原值；保存后新的调用读取最新配置，无需重启后端。
 
-密钥按填写内容保存和使用，不要求固定前缀，也不解析 `env:` 引用。如果已有记录填写了 `env:ATLAS_API_KEY` 等文本，请在此处替换为服务商提供的真实 Key。其他已接入厂商使用同样的配置方式，`ruoyi-web` 无需单独配置 Key。
-
 用户端选择模型时，不需要再填写 Key。
 
 如果上一步配置的是 **PPIO**，在同一个模型表单中改用以下内容：

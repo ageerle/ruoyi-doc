@@ -366,8 +366,6 @@ Start with ordinary chat. For a DeepSeek model allowed by the current code:
 
 Enter the actual Key in **ruoyi-admin → Model Management**. Leaving it empty when editing retains the previous Key; entering a new value replaces it. Save-time changes apply to new calls without restarting Java. Users do not supply Keys in chat.
 
-Keys are saved and used as entered, without a required prefix or `env:` expansion. Replace existing values such as `env:ATLAS_API_KEY` with the actual service Key in this form. Other integrated providers use the same configuration flow; `ruoyi-web` needs no separate Key.
-
 For **PPIO**, use:
 
 | Field | Example |
