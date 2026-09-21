@@ -6,7 +6,7 @@ outline: deep
 
 Workflow orchestration connects user input, models, knowledge bases, and external services into reusable AI workflows (AI Flow). Define steps and execution order on the admin canvas, test them, and make the workflow available in the user app or through an API in your own application.
 
-The default node library contains **Start, End, Generate Answer, Conditional Branch, and Web Search**. Knowledge Retrieval, Image Generation, Mail Send, and HTTP Request are also implemented, but require component initialization and their external dependencies. See [Current capabilities](#当前版本的真实能力).
+The default node library contains **Start, End, Generate Answer, Conditional Branch, Web Search, and Knowledge Retrieval**. Image Generation, Mail Send, and HTTP Request are also implemented, but require component initialization and their external dependencies. See [Current capabilities](#当前版本的真实能力).
 
 This guide explains nodes, edges, and variables, then walks through a complete release-checklist example, user-app access, API integration, and individual node configuration. The screenshots use the Chinese interface; sample names and data are retained so you can match them to the examples.
 
@@ -357,7 +357,7 @@ In the local environment documented by the Chinese guide, some historical `input
 
 ### Nodes initialized by the baseline SQL {#基线-sql-默认可见的节点}
 
-Importing the current `docs/script/sql/ruoyi-ai.sql` enables these five components:
+Importing the current `docs/script/sql/ruoyi-ai.sql` enables these six components:
 
 | Designer label | Component name | Execution class | Prerequisite |
 | --- | --- | --- | --- |
@@ -366,6 +366,7 @@ Importing the current `docs/script/sql/ruoyi-ai.sql` enables these five componen
 | Generate Answer | `Answer` | `LLMAnswerNode` | A working chat model |
 | Conditional Branch | `Switcher` | `SwitcherNode` | Conditions and target nodes |
 | Web Search | `Google` | `GoogleSearchNode` | A Zhipu Web Search API key |
+| Knowledge Retrieval | `KnowledgeRetrieval` | `KnowledgeRetrievalNode` | Parsed knowledge base, embedding model, vector store |
 
 The internal search name remains `Google`, but execution uses Zhipu Web Search.
 
@@ -377,7 +378,6 @@ These nodes have backend classes, frontend cards, and property panels, but lack 
 
 | Designer label | Required component name | Execution class | Dependency |
 | --- | --- | --- | --- |
-| Knowledge Retrieval | `KnowledgeRetrieval` | `KnowledgeRetrievalNode` | Parsed knowledge base, embedding model, vector store |
 | Tongyi Wanxiang | `Tongyiwanx` | `ImageNode` | Bailian / Wanxiang key and image model |
 | Mail Send | `MailSend` | `MailSendNode` | SMTP host, port, mailbox, authorization code |
 | HTTP Request | `HttpRequest` | `HttpRequestNode` | A reachable HTTP service |
@@ -489,7 +489,7 @@ Use the local verification knowledge base from [Knowledge Base](./knowledge.md):
 
 ### 1. Enable and add the node {#_1-启用并添加节点}
 
-Run the [component initialization SQL](#代码已实现、但基线-sql-未初始化的节点), refresh the designer, and drag in Knowledge Retrieval.
+The current full initialization SQL includes Knowledge Retrieval. For an existing database, run `docs/script/sql/update/2026-09-11-knowledge-retrieval-node.sql` from the backend repository, refresh the designer, and add the node. The script inserts missing records; existing disabled records must be enabled separately.
 
 ### 2. Configure retrieval {#_2-配置参数}
 
@@ -498,9 +498,11 @@ Run the [component initialization SQL](#代码已实现、但基线-sql-未初�
 | Knowledge base | One with parsed documents | The node stores the numeric ID, not the display name |
 | Count | `5` | `top_n` |
 | Score | `0` | Avoid filtering during the initial test; raise it after confirming retrieval |
-| Mode | `vector` | `hybrid` is also implemented; `graph` throws an unsupported error |
-| Query-rewriting prompt | Empty | A nonempty value adds a chat-model call |
-| Return sources | Enabled | Include filenames and relevance scores for verification |
+| Mode | `vector` | Select vector or hybrid retrieval; the node selection overrides the knowledge base hybrid setting |
+| Strict mode | Enabled | Use the default response for empty retrieval results; when disabled, output empty text |
+| Default response | `No relevant content found. Please rephrase your question.` | Fill this when strict mode is enabled; an empty value supplies no fallback |
+
+The panel defaults to `top_n=3` and `score=0.6`. The backend also supports query rewriting with `prompt` and source output with `return_source`; these fields are not exposed by this panel. Source output is enabled by default. Strict mode only handles this node's empty retrieval output: it neither stops the workflow nor constrains a downstream answer node. Retrieval exceptions can also appear as empty results, so inspect backend logs when diagnosing them.
 
 Reference Start's `output` in the retrieval node, then pass retrieval's `output` to End.
 
@@ -653,7 +655,7 @@ FROM t_workflow_component
 ORDER BY display_order, id;
 ```
 
-The baseline's missing retrieval, Wanxiang, mail, and HTTP records are a known initialization difference. Run the supplied SQL and refresh, keeping the exact component names.
+The current baseline registers Knowledge Retrieval; older databases can use its upgrade script. Use the supplied initialization SQL for Wanxiang, Mail, and HTTP nodes, then refresh and check the exact component names.
 
 ### A run never returns a result {#点击运行后一直没有结果}
 
@@ -677,7 +679,7 @@ This node implements vector and hybrid retrieval only. Set `retrieval_mode` to `
 
 ## Acceptance checklist {#验收清单}
 
-- [ ] The baseline library shows Start, End, Answer, Branch, and Web Search.
+- [ ] The baseline library shows Start, End, Answer, Branch, Web Search, and Knowledge Retrieval.
 - [ ] Start → End executes and displays real SSE output.
 - [ ] The chat model works in model management before testing Answer.
 - [ ] Knowledge management retrieves the test document before workflow retrieval is tested.

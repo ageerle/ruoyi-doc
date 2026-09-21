@@ -4,7 +4,7 @@ outline: deep
 
 # Model management {#模型管理}
 
-Model Management maintains names, categories, service addresses, and credential references for chat, agents, knowledge bases, and media. See [Model categories](#model-categories) for different uses.
+Model Management maintains names, categories, service addresses, and API Keys for chat, agents, knowledge bases, and media. See [Model categories](#model-categories) for different uses.
 
 Configuration has two parts: **Provider Management** selects an adapter and the default address for new models; **Model Management** selects the actual model, purpose, and credentials. Each provider can have multiple independently configured models.
 
@@ -38,7 +38,7 @@ Development defaults to port `5666`, with `apps/web-antd/vite.config.mts` forwar
 
 A provider supplies model services: DeepSeek is a provider, and `deepseek-v4-flash` is one of its models. Models from one provider usually share a protocol.
 
-In RuoYi AI, the provider selects **implementation code and the default address for new models**. Its name, icon, and description also support display. Configure the provider once, then add model-specific categories, IDs, and credential references.
+In RuoYi AI, the provider selects **implementation code and the default address for new models**. Its name, icon, and description also support display. Configure the provider once, then add model-specific categories, IDs, and API Keys.
 
 ### 2.2 Add or edit a provider {#_2-2-添加或编辑厂商}
 
@@ -52,7 +52,7 @@ For DeepSeek:
 | --- | --- | --- |
 | Name | `DeepSeek` | Customizable display name. |
 | Code | DeepSeek, `deepseek` | Selects its backend adapter. |
-| API address | `https://api.deepseek.com` | Default copied to new models; the current adapter requires this official address. |
+| API address | `https://api.deepseek.com` | Default copied to new models; use the service address matching the model and Key. |
 | Sort order | `0` | Ascending, then provider ID. |
 | Status | Enabled | Required for model configuration and new calls. |
 | Icon, description, notes | Optional | Display metadata, not protocol settings. |
@@ -122,9 +122,9 @@ Classes are in `org.ruoyi.service.chat.impl.provider`:
 | Dify | `dify` | `DifyChatServiceImpl` |
 | Coze | `coze` | `CozeChatServiceImpl` |
 
-An adapter's presence means protocol code exists; usable calls also require address and credential policy support. Current policies cover DeepSeek, PPIO, and both custom protocols. Extend credential validation for other providers as needed. See [Custom protocols](#custom-provider).
+Choose an existing provider adapter or a compatible [custom protocol](#custom-provider), then configure its address, model ID and real API Key in Model Management.
 
-These credential policies concern calls that **resolve an API key**. Ollama chat and embedding adapters do not read a key. For an Ollama service that needs no authentication, use an HTTPS endpoint reachable by the backend and leave the key field untouched when creating the model. API clients should omit `apiKey` or send `null`, not an empty string. HTTP is still rejected on save. If an Ollama gateway requires authentication, extend the adapter's authentication support as well; HTTPS alone does not provide it. Earlier HTTP screenshots do not demonstrate that the same record can be created under current rules.
+Ollama chat and embedding adapters do not read a Key. For a local service without authentication, use a reachable HTTP or HTTPS address and leave the Key empty. Authenticated Ollama gateways require adapter authentication support.
 
 Dify and Coze use dedicated adapters. FastGPT and RAGFlow have no dedicated classes and can use `custom_api` when compatible. See [Platform integration](./models-platforms-integration.md).
 :::
@@ -149,15 +149,32 @@ PPIO("ppio", "PPIO 派欧云"),
 The implementation in `org.ruoyi.service.chat.impl.provider.PpioChatServiceImpl`, with imports omitted:
 
 ```java
+package org.ruoyi.service.chat.impl.provider;
+
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import org.ruoyi.common.chat.domain.dto.request.ChatRequest;
+import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
+import org.ruoyi.enums.ChatModeType;
+import org.ruoyi.observability.MyChatModelListener;
+import org.ruoyi.service.chat.AbstractChatService;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
+
+/** PPIO 的 OpenAI Chat Completions 兼容接入。 */
 @Service
 public class PpioChatServiceImpl implements AbstractChatService {
 
     @Override
     public StreamingChatModel buildStreamingChatModel(ChatModelVo config, ChatRequest request) {
-        String baseUrl = validateConfiguration(config);
+        String baseUrl = normalizeBaseUrl(config.getApiHost());
         return OpenAiStreamingChatModel.builder()
             .baseUrl(baseUrl)
-            .apiKey(config.resolveApiKeyForConfiguredEndpoint(getProviderName()))
+            .apiKey(config.getApiKey())
             .modelName(config.getModelName())
             .listeners(List.of(new MyChatModelListener()))
             .returnThinking(Boolean.TRUE.equals(request.getEnableThinking()))
@@ -167,19 +184,22 @@ public class PpioChatServiceImpl implements AbstractChatService {
 
     @Override
     public ChatModel buildChatModel(ChatModelVo config) {
-        String baseUrl = validateConfiguration(config);
+        String baseUrl = normalizeBaseUrl(config.getApiHost());
         return OpenAiChatModel.builder()
             .baseUrl(baseUrl)
-            .apiKey(config.resolveApiKeyForConfiguredEndpoint(getProviderName()))
+            .apiKey(config.getApiKey())
             .modelName(config.getModelName())
             .listeners(List.of(new MyChatModelListener()))
             .timeout(Duration.ofMinutes(3))
             .build();
     }
 
-    private String validateConfiguration(ChatModelVo config) {
-        return ChatModelCredentialPolicy.requirePpioConfiguration(
-            config.getProviderCode(), config.getModelName(), config.getApiHost(), config.getApiKey());
+    private String normalizeBaseUrl(String apiHost) {
+        if (apiHost == null) {
+            return null;
+        }
+        String baseUrl = apiHost.replaceAll("/+$", "");
+        return baseUrl.endsWith("/openai") ? baseUrl + "/v1" : baseUrl;
     }
 
     @Override
@@ -196,31 +216,9 @@ Both builders validate before resolving keys and use normalized `https://api.ppi
 PPIO serves multiple model families, so this adapter does not copy DeepSeek-specific `thinking`, `reasoning_effort`, or `parallel_tool_calls`. `returnThinking` receives returned reasoning; it does not enable the remote model's reasoning mode. Configure tools, image input, and reasoning options according to the selected model.
 :::
 
-**Step 2: integrate credential validation.** PPIO uses `env:PPIO_API_KEY`, with the actual secret in Java's `PPIO_API_KEY` environment variable.
+**Step 2: use the configured API Key.** Read `ChatModelVo.getApiKey()` when creating the provider client. Administrators enter the real Key in Model Management. Model creation, editing and batch updates store the supplied value directly.
 
-::: details Shared save, call, and batch-update rules
-
-| Code | PPIO handling |
-| --- | --- |
-| `ChatModelSecretReference.ENV_REFERENCE_REGEXP` | Allows `env:PPIO_API_KEY` alongside distinct DeepSeek/custom rules; rejects plaintext and invalid references. |
-| `ChatModelCredentialPolicy.requirePersistableConfiguration()` | Routes creation/edit validation by `ppio`. |
-| `requirePpioConfiguration()` | Checks provider, model ID, official HTTPS URL, and reference; returns a normalized base URL. |
-| `resolveApiKeyForUse()` | Confirms consumer/provider identity, applies trusted-configuration rules, then reads the variable. |
-| `ChatModelServiceImpl.updateApiKeyByProvider()` | Locks and validates PPIO models, then updates only validated IDs. |
-
-Provider/reference binding is enforced by `requireProviderReference()`:
-
-```text
-ppio     → env:PPIO_API_KEY     → PPIO 官方接口
-deepseek → env:DEEPSEEK_API_KEY → DeepSeek 官方接口
-```
-
-Even for a DeepSeek-family model hosted by PPIO, use provider `ppio` and a PPIO key. Cross-provider references are rejected on save or call.
-
-Copy the full PPIO model ID, such as the documented `deepseek/deepseek-r1`. Local checks validate presence, length, and characters without hardcoding a catalog. Availability and account permission still require console and runtime checks.
-
-Use these same entry points for another provider. `ChatModelBo` and `ModelBatchKeyBo` share reference-format validation; actual secrets remain in the backend environment.
-:::
+Use the Key issued by the selected service: a DeepSeek model hosted by PPIO still needs a PPIO Key.
 
 **Step 3: configure the provider in the admin console.** `apps/web-antd/src/views/chat/provider/options.ts` already contains:
 
@@ -263,21 +261,9 @@ In **Model Management → Add**, select the saved provider. Both show protocol i
 | Category | Chat (`chat`) | Chat (`chat`) |
 | Model name | Service model ID | Service model ID |
 | Request address | `https://openai-gateway.example/v1` | `https://anthropic-gateway.example/v1` |
-| Key | `env:CUSTOM_OPENAI_API_KEY` | `env:CUSTOM_ANTHROPIC_API_KEY` |
+| Key | Actual API Key | Actual API Key |
 
-Replace example domains, use HTTPS, and preserve required prefixes such as `/api/v1` or `/anthropic/v1`. Before saving, configure paired URLs and real keys in the backend:
-
-```dotenv
-CUSTOM_OPENAI_BASE_URL=https://openai-gateway.example/v1
-CUSTOM_OPENAI_API_KEY=替换为该服务的真实Key
-
-CUSTOM_ANTHROPIC_BASE_URL=https://anthropic-gateway.example/v1
-CUSTOM_ANTHROPIC_API_KEY=替换为该服务的真实Key
-```
-
-Set these in the backend terminal, IDE, or container and restart. Forms store `env:...` references; saving and calling check that the model URL matches the URL bound to that key.
-
-For multiple addresses under one protocol, use named pairs. `env:CUSTOM_OPENAI_TEAM_A_API_KEY` requires `CUSTOM_OPENAI_TEAM_A_API_KEY` and `CUSTOM_OPENAI_TEAM_A_BASE_URL`; Anthropic uses `CUSTOM_ANTHROPIC_TEAM_A_...`. The name starts with an uppercase letter, followed by uppercase letters, digits, or underscores, up to 32 characters.
+Replace the example addresses with your service URLs, preserving required path prefixes such as `/api/v1`. Enter the service API Key directly in the same model form. Each model can have its own address and Key; no paired environment variables are needed.
 
 Then [save a model](#configure-model) and [chat in the user app](#use-model), as with DeepSeek or PPIO.
 
@@ -311,8 +297,8 @@ Both adapters support streaming and complete responses. Anthropic defaults to 4,
 ::: details Code behind the custom protocols
 - `ChatModeType` and `provider/options.ts` define distinct codes.
 - `CustomApiServiceImpl` uses `OpenAiChatModel` / `OpenAiStreamingChatModel`; `CustomAnthropicServiceImpl` uses the corresponding Anthropic clients. Factory lookup uses the code.
-- `model-modal.vue` uses `getCustomProviderConfig()` to show protocol, address, and reference hints. New provider selection clears the address; editing retains it. An empty key edit retains the old reference.
-- `CustomApiCredentialPolicy` validates protocol, address, and dedicated reference for creation, edits, batch updates, and calls. Every target model in a batch must match the bound address or the entire batch is rejected.
+- `model-modal.vue` uses `getCustomProviderConfig()` to show protocol, address, and API Key hints. New provider selection clears the address; editing retains it. An empty Key edit retains the previous Key.
+- `CustomApiCredentialPolicy` normalizes custom-protocol addresses. Calls use the Key saved on the model. A provider-wide batch update applies the submitted Key to that provider's models.
 
 Existing `providerCode`, `apiHost`, and `apiKey` fields are reused; no database columns are added. Update both applications and create the provider records.
 :::
@@ -375,10 +361,12 @@ Start with ordinary chat. For a DeepSeek model allowed by the current code:
 | Model name | `deepseek-v4-flash` | Actual service model ID. |
 | Description | `DeepSeek V4 Flash` | User-facing name. |
 | Request address | `https://api.deepseek.com` | Copied from the provider; hidden by default for regular chat providers. |
-| Key | `env:DEEPSEEK_API_KEY` | Environment reference required by current code. |
+| Key | The actual DeepSeek API Key | Paste the Key from the provider console. |
 | Notes | Optional | Intended use. |
 
-Set the actual `DEEPSEEK_API_KEY` in the backend terminal, IDE run configuration, or container and restart Java. The admin stores the reference; users do not supply keys in chat.
+Enter the actual Key in **ruoyi-admin → Model Management**. Leaving it empty when editing retains the previous Key; entering a new value replaces it. Save-time changes apply to new calls without restarting Java. Users do not supply Keys in chat.
+
+Keys are saved and used as entered, without a required prefix or `env:` expansion. Replace existing values such as `env:ATLAS_API_KEY` with the actual service Key in this form. Other integrated providers use the same configuration flow; `ruoyi-web` needs no separate Key.
 
 For **PPIO**, use:
 
@@ -389,12 +377,12 @@ For **PPIO**, use:
 | Model name | Full authorized console ID, for example `deepseek/deepseek-r1`. |
 | Description | `PPIO DeepSeek R1`, or another recognizable name. |
 | Request address | Copied `https://api.ppio.com/openai/v1`. |
-| Key | `env:PPIO_API_KEY` |
+| Key | Actual API Key |
 
-Set Java's `PPIO_API_KEY`, restart, save, and [verify in the user app](#use-model).
+Enter the PPIO Key directly in Model Management, save, and [verify in the user app](#use-model).
 
 ::: info Other providers
-DeepSeek, PPIO, and both custom protocols have address/credential validation. Use [custom protocols](#custom-provider) for compatible services. Other adapters still need matching policies; see [provider extension](#provider-extension).
+All implemented provider adapters read the API Key saved for the selected model. Use [custom protocols](#custom-provider) for compatible services, or implement a dedicated adapter for another protocol.
 :::
 
 ::: details Custom addresses and existing models
@@ -411,7 +399,7 @@ if (getCustomProviderConfig(newProviderCode)) {
 
 During editing, `isLoading` skips this logic to preserve the address. To change a regular chat model URL, `PUT /system/model` can submit a new `apiHost` together with required ID, provider code, model name, category, and other fields.
 
-Direct API creation also requires an address; `ChatModelServiceImpl` does not fill it from the provider table. Current saves require HTTPS.
+When creating a model through the API, supply the service address required by its adapter; `ChatModelServiceImpl` does not fill it from the provider table. Custom protocols support HTTP or HTTPS addresses.
 :::
 
 ### 3.4 Save the model {#_3-4-保存模型}
@@ -529,14 +517,14 @@ Verify embeddings through document upload/retrieval, and reranking through call 
 | Provider absent in model form | Enabled state, reopen form, tenant, and permissions. |
 | Missing/stale Chat category | `chat_model_category` value `chat`; refresh dictionary cache and page. |
 | Provider unconfigured/disabled on save or call | Matching provider row and status, or select another enabled provider. |
-| Address/key format rejected | HTTPS and matching reference: `env:DEEPSEEK_API_KEY` or `env:PPIO_API_KEY`; PPIO URL `https://api.ppio.com/openai/v1`. |
+| Unable to save a model | Check enabled provider, category and model name. Enter the actual API Key directly. |
 | Model missing in user list | Login, enabled provider, `chat`, same backend and tenant. |
 | List permission error | `system:model:list` or `coding:harness:use`. |
 | Calls retain the old provider address | Update the model's independently saved `apiHost`. |
 | Unsupported model category error | Provider code matches `getProviderName()` and updated Java is running. |
-| Missing variable, 401, or 403 | Java's actual key environment, provider permissions, and quota. |
+| 401 / 403 | Check the API Key in Model Management, service permissions and quota. |
 | 404 or unknown model | Final API URL and exact model ID. |
-| Custom URL variable missing/mismatched | Matching protocol reference and paired `_BASE_URL`, including the model URL path. |
+| Custom service call fails | Check the protocol, request address and API Key configured for this model. |
 | Chat succeeds but agents fail | Complete-response client and required tool-call support. |
 
 ### Display names in model selectors {#model-display}
@@ -573,8 +561,6 @@ domain/vo/chat/ChatModelVo.java
 domain/vo/chat/ChatModelSelectVo.java
 domain/bo/chat/ChatModelBo.java
 domain/bo/chat/ModelBatchKeyBo.java
-security/ChatModelCredentialPolicy.java
-security/ChatModelSecretReference.java
 security/CustomApiCredentialPolicy.java
 ```
 

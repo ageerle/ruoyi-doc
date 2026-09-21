@@ -53,7 +53,7 @@ curl https://fastgpt.example.com/api/v1/chat/completions \
 
 进入“对话管理 → 模型管理 → 新增”。
 
-先在启动后端的环境中设置 `CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1`，将 `CUSTOM_OPENAI_FASTGPT_API_KEY` 设为 `<FASTGPT_API_KEY>-<APP_ID>` 的组合值，并重新启动后端。域名和凭据使用自己的实际配置；完整 PowerShell 示例见[平台接入的凭据配置](../features/models-platforms-integration.md#prepare-fastgpt)。
+在模型管理中直接填写 FastGPT 服务基础地址，将 `<FASTGPT_API_KEY>-<APP_ID>` 的真实组合值填入密钥框，无需配置环境变量。
 
 | 字段 | 值 |
 | --- | --- |
@@ -61,14 +61,14 @@ curl https://fastgpt.example.com/api/v1/chat/completions \
 | 模型分类 | 对话 |
 | 模型名称 | `fastgpt-app`，当前 FastGPT 会由应用编排决定实际模型 |
 | 模型描述 | 便于用户识别的应用名称 |
-| 请求地址 | `https://fastgpt.example.com/api/v1`，与配对环境变量一致 |
-| 密钥 | `env:CUSTOM_OPENAI_FASTGPT_API_KEY`，表单只保存引用 |
+| 请求地址 | `https://fastgpt.example.com/api/v1`，替换为实际服务地址 |
+| 密钥 | `<FASTGPT_API_KEY>-<APP_ID>` 的真实组合值 |
 
-请求地址是 HTTPS base URL，不要填写完整的 `/api/v1/chat/completions`。RuoYi AI 使用的 LangChain4j OpenAI 客户端会自动追加 `/chat/completions`。当前模型保存规则不接受 HTTP 或明文 Key。
+请求地址填写服务 base URL，不要追加 `/chat/completions`；OpenAI 客户端会自动追加该路径。服务地址需能被后端访问。
 
 ::: danger Key 格式
 
-通用 `custom_api` 不能在 JSON 请求体中增加 FastGPT 的 `appId`。因此后端环境变量中必须保存 FastGPT 支持的 `<apiKey>-<appId>` 组合值，管理端只填写对应的 `env:` 引用。若目标 FastGPT 版本不支持该格式，需要新增专用 provider，不能仅靠后台字段解决。
+通用 `custom_api` 不能在 JSON 请求体中增加 FastGPT 的 `appId`。在模型密钥框直接填写平台支持的 `<apiKey>-<appId>` 组合值；目标版本不支持该格式时，需要专用适配器。
 
 :::
 

@@ -67,7 +67,7 @@ ARM64 主机如果在镜像清单中看不到 `linux/arm64`，不要强行在生
 | DeepSeek、智谱、百炼、OpenAI 等 | 对应供应商 API Key |
 | 外部应用、搜索、邮件、多模态 | 对应服务的地址、账号及凭证，按所用模块的文档配置 |
 
-没有这些信息不会妨碍系统启动，但相应功能调用会失败。Key 只写入环境变量或后台密钥字段，不要提交到 Git。
+没有这些信息不会妨碍系统启动，但相应功能调用会失败。模型 API Key 统一在 **ruoyi-admin → 对话管理 → 模型管理** 中直接填写，不需要写入 Compose 环境变量。其他模块的凭据按对应功能文档配置，不要提交到 Git。
 
 ## 二、方式一：完整镜像部署（推荐） {#image-deploy}
 
@@ -242,7 +242,7 @@ docker exec ruoyi-ai-ollama ollama pull qwen2.5:1.5b
 docker exec ruoyi-ai-ollama ollama pull all-minilm:v2
 ~~~
 
-后端可通过 `http://ruoyi-ai-ollama:11434` 访问同网络的 Ollama。这个地址用于容器连通性检查；当前新建模型要求 HTTPS，无需鉴权的 Ollama 模型不填写密钥，带认证的网关还需适配器支持。聊天模型和向量模型的完整配置分别见[模型管理](/guide/features/model#provider-extension)与[知识管理](/guide/features/knowledge)。
+后端可通过 `http://ruoyi-ai-ollama:11434` 访问同网络的 Ollama，并将此地址填写到模型配置中。无需鉴权的 Ollama 模型密钥留空，带认证的网关还需适配器支持。聊天模型和向量模型的完整配置分别见[模型管理](/guide/features/model#provider-extension)与[知识管理](/guide/features/knowledge)。
 
 如果 Ollama 安装在宿主机：
 

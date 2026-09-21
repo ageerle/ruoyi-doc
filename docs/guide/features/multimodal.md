@@ -16,7 +16,7 @@ RuoYi AI 提供图片生成、语音合成和视频生成的接口，并在用�
 | **视频生成（文生视频）** | 输入场景与镜头描述，创建视频任务，再查询生成结果。 | 媒体工作台的 **视频生成**，或 `POST /media/video`。 |
 | **任务查询与结果预览** | 查询异步任务的进度，预览图片、播放音视频，并保存结果或任务 ID。 | 工作台的结果区、**本次任务**和**查询已有任务**。 |
 
-使用 Atlas Cloud 前，需配置启用的 `atlas` 厂商、媒体模型和后端环境变量，详见[调用前的接入条件](#credential-readiness)与[媒体效果示例](#media-examples)。可选参数和任务查询方式也取决于所用服务，配置媒体模型时需要一起确认。
+使用 Atlas Cloud 前，需在后台配置启用的 `atlas` 厂商、媒体模型和真实 API Key，详见[调用前的接入条件](#credential-readiness)与[媒体效果示例](#media-examples)。可选参数和任务查询方式也取决于所用服务，配置媒体模型时需要一起确认。
 
 普通聊天中的图片附件目前只支持本地预览，尚未接通看图问答或 OCR；媒体工作台也暂不提供参考图上传和图片编辑。相关说明见[聊天附件与扩展](#chat-attachments)。
 
@@ -106,30 +106,17 @@ pnpm run dev:antd
 
 `custom_anthropic` 当前没有媒体生成适配器。DeepSeek、PPIO、Ollama 等聊天厂商可用，也不等于拥有图片、语音或视频生成实现。
 
-如果模型表单中没有 Atlas Cloud，先检查当前租户下是否已有 `atlas` 厂商记录，以及它是否启用。当前管理端新增厂商的静态选项还不包含 `atlas`、`Tongyiwanx`；新环境需要先补充 `ruoyi-admin/apps/web-antd/src/views/chat/provider/options.ts` 中的选项，再创建记录。截图使用的是已有的 Atlas Cloud 厂商。
+如果列表中没有 Atlas Cloud，请先在厂商管理中添加并启用 `atlas` 厂商，再新建模型。
 
 ### 2.2 调用前的接入条件 {#credential-readiness}
 
-Atlas Cloud 使用以下配置，三类媒体模型共用同一个环境变量引用：
+在 ruoyi-admin 的模型管理中选择已启用的 `atlas` 厂商，请求地址填写 `https://api.atlascloud.ai/v1`，密钥框直接填写 Atlas 控制台创建的真实 API Key。每个媒体模型使用自己保存的 Key，无需配置环境变量。
 
-| 配置项 | 值 |
-| --- | --- |
-| 厂商编码 | `atlas`，厂商必须启用 |
-| 请求地址 | `https://api.atlascloud.ai/v1` |
-| 模型密钥字段 | `env:ATLAS_API_KEY`，不填写真实 Key |
-| 后端环境变量 | `ATLAS_API_KEY`，值为 Atlas 控制台创建的有效 Key |
-
-`ChatModelCredentialPolicy` 在保存及调用时都会校验厂商、模型 ID、地址和密钥引用。Atlas 只允许官方 `https://api.atlascloud.ai` 地址，可带 `/v1` 或 `/api/v1`，均可带结尾 `/`；不允许自定义域名、端口、查询参数或其他厂商的密钥引用。适配器会拼接到 `/api/v1/model/...`。
-
-真实 Key 注入 **Java 后端进程的环境变量**，可使用 IDE 运行配置或容器环境设置，修改后重启后端。不要写入版本库、前端 `.env` 或截图。`ruoyi-web` 的环境变量只用于前端配置，不会给 Java 提供密钥。
-
-::: warning 其他厂商的接入范围
-本页配置示例使用 `atlas`。`openai`、`Tongyiwanx` 的媒体凭据规则需要独立配置；`custom_api` 媒体回退到 `openai` 时，凭据消费身份不匹配，不能直接复用 Atlas 的配置。
-:::
+其他厂商填写对应服务地址和 Key，并确认已有适用的媒体适配器；模型保存成功不代表远端模型一定可用。
 
 ### 2.3 使用临时端口启动 {#temporary-port}
 
-当默认 `6039` 已被占用时，通过启动参数改为 `6049`，无需改动项目默认端口。先在运行环境配置 `ATLAS_API_KEY`，然后：
+当默认 `6039` 已被占用时，通过启动参数改为 `6049`，无需改动项目默认端口。模型 Key 在后台管理中配置，启动命令如下：
 
 ```powershell
 Set-Location D:\Project\github\ruoyi-ai
@@ -178,10 +165,10 @@ pnpm dev --host 127.0.0.1 --port 5180 --strictPort
 | 模型名称 | `openai/gpt-image-2/text-to-image` | 使用你实际接入服务的模型 ID，接口请求中的 `model` 也填这个值。 |
 | 模型描述 | GPT-IMAGE-2 文生图 | 用于页面展示，不代替接口中的模型名称。 |
 | 请求地址 | `https://api.atlascloud.ai/v1` | 填服务的基础地址；后端根据适配器拼接调用路径。 |
-| 密钥 | 编辑页不回显 | Atlas 填 `env:ATLAS_API_KEY`。 |
+| 密钥 | 编辑页不回显 | Atlas 填 真实 Atlas API Key。 |
 | 备注 | 模型用途说明 | 便于维护，不会变成生成请求参数。 |
 
-选择普通厂商时，表单会把厂商地址带入模型；之后修改厂商地址，需要同时检查已有模型的请求地址。配置后端环境变量并保存有效配置，返回列表核对供应商、分类和模型名称。
+选择普通厂商时，表单会把厂商地址带入模型；之后修改厂商地址，需要同时检查已有模型的请求地址。填写真实 API Key 并保存，返回列表核对供应商、分类和模型名称。
 
 ::: details 请求地址如何变成实际接口地址
 
@@ -218,7 +205,7 @@ pnpm run dev --host 127.0.0.1 --port 5180 --strictPort
 
 顶部有 **图片生成、语音合成、视频生成** 三个入口，分别读取 `image`、`audio`、`video` 分类的模型。刚在管理端保存配置时，点击 **刷新模型** 即可重新加载。没有可用模型时，页面会提示管理员检查对应分类和厂商状态。
 
-工作台负责填写参数、提交任务和展示结果，服务商地址与密钥仍由后端读取。开始生成前，需要完成[厂商与环境变量配置](#credential-readiness)。
+工作台负责填写参数、提交任务和展示结果，服务商地址与密钥由后端读取。开始生成前，需要完成[后台模型与 Key 配置](#credential-readiness)。
 
 ### 4.2 生成一张图片
 
@@ -315,7 +302,7 @@ const { data } = await generateImage({
 
 **HTTP 200 不等于生成成功，还要检查响应体中的 `code`。** 非成功响应应读取 `msg`；若只返回通用提示，可结合服务端日志定位原因。
 
-下面的请求展示公共接口的填写方式。Atlas 生成需要先完成[厂商与环境变量配置](#credential-readiness)，并将模型名和可选参数替换为你已验证的配置。
+下面的请求展示公共接口的填写方式。Atlas 生成需要先完成[后台模型与 Key 配置](#credential-readiness)，并将模型名和可选参数替换为你已验证的配置。
 
 ### 5.2 生成图片 {#generate-image}
 
@@ -466,7 +453,7 @@ if ("atlas".equals(model.getProviderCode())) {
 return R.ok(toImageResponse(service.generateImage(context)));
 ```
 
-它先用模型名称读取配置并检查分类，再按厂商编码选实现，最后转换结果。新增媒体厂商时，需要同时接好厂商选项、凭据规则、媒体服务实现和结果解析；只增加一个下拉选项还不够。
+它先用模型名称读取配置并检查分类，再按厂商编码选实现，最后转换结果。新增媒体厂商时，需要接好厂商选项、媒体服务实现和结果解析，并将模型中保存的 Key 传给客户端。
 
 在 `ruoyi-ai` 中可以按以下位置阅读代码：
 
@@ -476,7 +463,7 @@ return R.ok(toImageResponse(service.generateImage(context)));
 | 厂商对应的媒体实现 | 同模块的 `service/image/provider/`、`service/audio/provider/`、`service/video/provider/` |
 | 地址拼接与 Atlas 查询 | 同模块的 `service/media/` |
 | 按厂商选择服务 | `ruoyi-common/ruoyi-common-chat/src/main/java/org/ruoyi/common/chat/factory/` 下的三个媒体工厂 |
-| 密钥引用与地址校验 | 同一公共模块的 `security/ChatModelSecretReference.java`、`ChatModelCredentialPolicy.java`、`CustomApiCredentialPolicy.java` |
+| 模型 Key | 在 ruoyi-admin 模型管理中填写，适配器通过 `ChatModelVo.getApiKey()` 读取。 |
 
 如果你的目标是多模态知识库，仓库中的 `AliBaiLianMultiEmbeddingProvider` 已有文本、图片、视频及组合输入实现，但当前知识库文档入库流程尚未调用 `embedMultiModal`，还需要开发媒体入库和检索流程。
 
@@ -488,8 +475,7 @@ return R.ok(toImageResponse(service.generateImage(context)));
 | --- | --- |
 | 模型表单找不到厂商 | 厂商是否在当前租户启用；新环境的 Atlas、万相选项还需补充管理端静态配置。 |
 | 分类选项不对或没有更新 | 检查 `chat_model_category` 的标签、键值和缓存，重新打开表单。 |
-| 保存密钥失败，或调用前提示凭据不受信任 | 按[媒体凭据接入](#credential-readiness)检查厂商规则、环境变量引用和地址绑定。 |
-| `Credential consumer does not match the configured provider` | 检查是否使用了 `custom_api` 回退到 `openai` 的媒体路径，需要补齐适配器与凭据身份的对应关系。 |
+| 模型保存失败或调用鉴权失败 | 检查厂商是否启用、必填项是否齐全，以及模型管理中保存的 Key 是否有效。 |
 | 接口提示未找到模型或返回通用异常 | 请求的 `model` 是否与记录完全一致、分类是否正确、厂商是否启用；通用错误需要结合服务端日志定位。 |
 | RuoYi 接口返回未登录或无权限 | 先检查登录令牌、同一客户端的 `Clientid` 和账号权限。 |
 | 外部服务返回鉴权失败 | 确认请求已经到达服务商，再检查媒体 Key、服务权限和账户状态。 |

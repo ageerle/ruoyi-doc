@@ -4,7 +4,7 @@ outline: deep
 
 # 模型管理
 
-模型管理用于统一维护模型的名称、分类、服务地址和密钥引用，为对话、智能体、知识库和媒体功能提供所需模型。不同用途对应不同的模型分类，具体说明见[配置其他用途的模型](#model-categories)。
+模型管理用于统一维护模型的名称、分类、服务地址和API Key，为对话、智能体、知识库和媒体功能提供所需模型。不同用途对应不同的模型分类，具体说明见[配置其他用途的模型](#model-categories)。
 
 配置分为两部分：**厂商管理**确定使用哪套接入实现，以及创建模型时默认连接哪个地址；**模型管理**指定具体模型、用途和凭据。一个厂商可以配置多个模型，各模型分别保存自己的调用配置。
 
@@ -58,7 +58,7 @@ pnpm run dev:antd
 | --- | --- | --- |
 | 厂商名称 | `DeepSeek` | 页面上显示的名称，可以自行命名。 |
 | 厂商编码 | 选择“深度求索”，对应 `deepseek` | 后端用这个编码找到 DeepSeek 的接入实现。 |
-| API 地址 | `https://api.deepseek.com` | 创建模型时带入的默认地址。当前 DeepSeek 实现要求使用这个官方地址。 |
+| API 地址 | `https://api.deepseek.com` | 创建模型时带入的默认地址，请填写与模型和 Key 对应的服务地址。 |
 | 排序 | `0` | 数值越小越靠前；相同数值再按厂商 ID 排序。 |
 | 状态 | 启用 | 只有启用的厂商才能用于模型配置和新的调用。 |
 | 厂商图标、描述、备注 | 按需填写 | 帮助识别厂商，不影响接口调用方式。 |
@@ -133,9 +133,9 @@ PPIO 已在项目中完成接入，下面说明这次接入涉及哪些代码。
 | Dify | `dify` | `DifyChatServiceImpl` |
 | Coze | `coze` | `CozeChatServiceImpl` |
 
-已有适配类说明项目中有相应的协议代码，实际调用还需要地址和凭据策略支持。当前凭据策略已支持 DeepSeek、PPIO 和两种自定义协议；其他厂商需要配套扩展下文的凭据校验。自定义服务的配置方式见[选择自定义厂商协议](#custom-provider)。
+选择已有厂商适配器或兼容的[自定义协议](#custom-provider)，在模型管理中配置地址、模型 ID 和真实 API Key 即可。
 
-这里的凭据策略指**需要读取 API Key 的调用**。Ollama 的聊天和向量适配器不读取 Key；无需鉴权的 Ollama 可以使用后端可访问的 HTTPS 地址，新建模型时不要填写密钥（通过 API 创建时省略 `apiKey` 或传 `null`，不要传空字符串）。当前保存规则仍会拒绝 HTTP。若 Ollama 网关需要认证，仅配置 HTTPS 不够，还需扩展适配器的认证支持。已有 HTTP 配置的运行截图不代表当前可以新增同样的记录。
+Ollama 的聊天和向量适配器不读取 Key。无需鉴权的本地服务可以使用后端可访问的 HTTP 或 HTTPS 地址，密钥留空；需要认证的 Ollama 网关仍需适配器支持认证。
 
 Dify、Coze 使用各自的平台适配代码；FastGPT、RAGFlow 当前没有专用适配类，可在目标接口兼容时评估 `custom_api`。具体配置见[模型与平台接入](./models-platforms-integration.md)。
 
@@ -162,15 +162,32 @@ PPIO("ppio", "PPIO 派欧云"),
 适配类位于 `org.ruoyi.service.chat.impl.provider.PpioChatServiceImpl`。以下为实际实现，省略 import：
 
 ```java
+package org.ruoyi.service.chat.impl.provider;
+
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.StreamingChatModel;
+import dev.langchain4j.model.openai.OpenAiChatModel;
+import dev.langchain4j.model.openai.OpenAiStreamingChatModel;
+import org.ruoyi.common.chat.domain.dto.request.ChatRequest;
+import org.ruoyi.common.chat.domain.vo.chat.ChatModelVo;
+import org.ruoyi.enums.ChatModeType;
+import org.ruoyi.observability.MyChatModelListener;
+import org.ruoyi.service.chat.AbstractChatService;
+import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.util.List;
+
+/** PPIO 的 OpenAI Chat Completions 兼容接入。 */
 @Service
 public class PpioChatServiceImpl implements AbstractChatService {
 
     @Override
     public StreamingChatModel buildStreamingChatModel(ChatModelVo config, ChatRequest request) {
-        String baseUrl = validateConfiguration(config);
+        String baseUrl = normalizeBaseUrl(config.getApiHost());
         return OpenAiStreamingChatModel.builder()
             .baseUrl(baseUrl)
-            .apiKey(config.resolveApiKeyForConfiguredEndpoint(getProviderName()))
+            .apiKey(config.getApiKey())
             .modelName(config.getModelName())
             .listeners(List.of(new MyChatModelListener()))
             .returnThinking(Boolean.TRUE.equals(request.getEnableThinking()))
@@ -180,19 +197,22 @@ public class PpioChatServiceImpl implements AbstractChatService {
 
     @Override
     public ChatModel buildChatModel(ChatModelVo config) {
-        String baseUrl = validateConfiguration(config);
+        String baseUrl = normalizeBaseUrl(config.getApiHost());
         return OpenAiChatModel.builder()
             .baseUrl(baseUrl)
-            .apiKey(config.resolveApiKeyForConfiguredEndpoint(getProviderName()))
+            .apiKey(config.getApiKey())
             .modelName(config.getModelName())
             .listeners(List.of(new MyChatModelListener()))
             .timeout(Duration.ofMinutes(3))
             .build();
     }
 
-    private String validateConfiguration(ChatModelVo config) {
-        return ChatModelCredentialPolicy.requirePpioConfiguration(
-            config.getProviderCode(), config.getModelName(), config.getApiHost(), config.getApiKey());
+    private String normalizeBaseUrl(String apiHost) {
+        if (apiHost == null) {
+            return null;
+        }
+        String baseUrl = apiHost.replaceAll("/+$", "");
+        return baseUrl.endsWith("/openai") ? baseUrl + "/v1" : baseUrl;
     }
 
     @Override
@@ -210,34 +230,9 @@ PPIO 可以提供不同系列的模型，因此这里没有直接复制 DeepSeek
 
 :::
 
-**第二步：接入凭据校验。** 能创建客户端后，还要让模型配置可以保存，并在调用时读到正确的 Key。PPIO 使用独立引用 `env:PPIO_API_KEY`，实际 Key 放在后端进程的 `PPIO_API_KEY` 环境变量中。
+**第二步：使用后台配置的 Key。** 创建厂商客户端时读取 `ChatModelVo.getApiKey()`。管理员在模型管理中直接填写真实 Key，新增、编辑与按厂商批量更新都直接保存填写内容。
 
-::: details 对照代码：保存、调用与批量更新共用哪些规则
-
-本次接入同时修改了以下入口：
-
-| 代码位置 | PPIO 的处理方式 |
-| --- | --- |
-| `ChatModelSecretReference.ENV_REFERENCE_REGEXP` | PPIO 使用 `env:PPIO_API_KEY`。DeepSeek 和两种自定义协议也各有自己的引用规则，继续拒绝明文 Key 和不符合规则的环境变量引用。 |
-| `ChatModelCredentialPolicy.requirePersistableConfiguration()` | 模型新增和编辑时，按 `ppio` 编码进入 PPIO 配置校验。 |
-| `ChatModelCredentialPolicy.requirePpioConfiguration()` | 检查编码、模型 ID、官方 HTTPS 地址和 PPIO 密钥引用，并返回标准 base URL。 |
-| `ChatModelCredentialPolicy.resolveApiKeyForUse()` | 先确认调用方与配置的厂商一致，再通过 `requireTrustedConfiguration()` 选择厂商规则，通过后才读取环境变量。 |
-| `ChatModelServiceImpl.updateApiKeyByProvider()` | 支持按 `ppio` 批量更新引用，锁定并校验该厂商的模型后，只更新校验过的模型 ID。 |
-
-厂商与凭据的绑定由 `requireProviderReference()` 统一检查：
-
-```text
-ppio     → env:PPIO_API_KEY     → PPIO 官方接口
-deepseek → env:DEEPSEEK_API_KEY → DeepSeek 官方接口
-```
-
-因此，即使 PPIO 中选择的是 DeepSeek 系列模型，也要使用 `ppio` 厂商和 PPIO 的 Key。把两个厂商的密钥引用混用，保存或调用时都会被拒绝。
-
-PPIO 的模型 ID 按控制台中的完整名称填写，例如官方文档中的 `deepseek/deepseek-r1`。本地校验检查非空、长度和字符格式，不把模型目录写死；该模型是否仍可用、当前账号是否有权限，需要以 PPIO 控制台和实际调用为准。
-
-扩展下一个厂商时，可以沿着这些入口增加它自己的规则。`ChatModelBo` 和 `ModelBatchKeyBo` 共用凭据引用格式校验，真实 Key 始终由后端运行环境提供。
-
-:::
+Key 应由所选服务商提供。例如通过 PPIO 调用 DeepSeek 系列模型时，填写 PPIO 控制台创建的 Key。
 
 **第三步：在管理端配置厂商。** 管理端的 `apps/web-antd/src/views/chat/provider/options.ts` 已有以下选项，本次沿用即可：
 
@@ -282,21 +277,9 @@ PPIO 的模型 ID 按控制台中的完整名称填写，例如官方文档中�
 | 模型分类 | 对话（`chat`） | 对话（`chat`） |
 | 模型名称 | 服务商提供的模型 ID | 服务商提供的模型 ID |
 | 请求地址 | `https://openai-gateway.example/v1` | `https://anthropic-gateway.example/v1` |
-| 密钥 | `env:CUSTOM_OPENAI_API_KEY` | `env:CUSTOM_ANTHROPIC_API_KEY` |
+| 密钥 | 实际 API Key | 实际 API Key |
 
-示例域名需要替换为实际服务地址。地址使用 HTTPS，并保留服务商要求的路径前缀，例如 `/api/v1` 或 `/anthropic/v1`。模型保存前，先在后端运行环境中配置与之对应的地址和真实 Key：
-
-```dotenv
-CUSTOM_OPENAI_BASE_URL=https://openai-gateway.example/v1
-CUSTOM_OPENAI_API_KEY=替换为该服务的真实Key
-
-CUSTOM_ANTHROPIC_BASE_URL=https://anthropic-gateway.example/v1
-CUSTOM_ANTHROPIC_API_KEY=替换为该服务的真实Key
-```
-
-将这些变量设置到启动后端的终端、IDE 运行配置或容器环境中，然后重启后端。模型表单填写 `env:...` 引用，后端负责读取实际 Key；保存和调用时都会核对请求地址是否与这份 Key 绑定的地址一致。
-
-如果同一种协议要接入多个地址，可以为每个服务增加一组带名称的变量。例如，模型使用 `env:CUSTOM_OPENAI_TEAM_A_API_KEY` 时，后端配置 `CUSTOM_OPENAI_TEAM_A_API_KEY` 和 `CUSTOM_OPENAI_TEAM_A_BASE_URL`；Anthropic 同理使用 `CUSTOM_ANTHROPIC_TEAM_A_...`。名称使用大写英文字母开头，后续可用大写字母、数字和下划线，最多 32 个字符。
+示例域名替换为实际服务地址，保留 `/api/v1` 等必要路径前缀。地址与真实 API Key 直接填写在同一个模型表单中。不同模型可以使用不同地址和 Key，无需配置配对环境变量。
 
 完成后，继续[填写并保存模型](#configure-model)，再到[用户端选择模型](#use-model)发起对话。用户端的操作与 DeepSeek、PPIO 相同。
 
@@ -333,8 +316,8 @@ curl https://anthropic-gateway.example/v1/messages \
 
 - `ChatModeType` 和管理端 `provider/options.ts` 定义两个独立的厂商编码。
 - `CustomApiServiceImpl` 使用 `OpenAiChatModel` / `OpenAiStreamingChatModel`，`CustomAnthropicServiceImpl` 使用 `AnthropicChatModel` / `AnthropicStreamingChatModel`。`ChatServiceFactory` 按编码自动选择实现。
-- `model-modal.vue` 通过 `getCustomProviderConfig()` 识别两种自定义厂商，显示协议、请求地址和密钥引用提示。新选择厂商时清空地址，编辑已有模型时保留地址；编辑时密钥留空会保留原引用。
-- `CustomApiCredentialPolicy` 统一校验协议、地址和专用密钥引用。模型新增、编辑、批量密钥更新和调用都复用这套规则。批量更新时，所有目标模型都必须匹配该引用绑定的地址，否则整批拒绝。
+- `model-modal.vue` 通过 `getCustomProviderConfig()` 识别两种自定义厂商，显示协议、请求地址和 API Key 提示。新选择厂商时清空地址，编辑已有模型时保留地址；编辑时密钥留空会保留原 Key。
+- `CustomApiCredentialPolicy` 规范化自定义协议的请求地址。Key 直接使用模型保存的值；按厂商批量更新时，提交的 Key 会应用到该厂商的模型。
 
 本功能复用模型已有的 `providerCode`、`apiHost` 和 `apiKey` 字段，无需新增数据库字段。更新后端和管理端后，在厂商管理中创建相应记录即可。
 
@@ -408,12 +391,14 @@ const options = [...getDictOptions(DictEnum.CHAT_MODEL_CATEGORY)];
 | 模型名称 | `deepseek-v4-flash` | 发给模型服务的真实模型 ID。 |
 | 模型描述 | `DeepSeek V4 Flash` | 便于用户识别的显示名称。 |
 | 请求地址 | `https://api.deepseek.com` | 选择普通厂商时自动带入，当前聊天表单默认不显示该输入框。 |
-| 密钥 | `env:DEEPSEEK_API_KEY` | 当前代码要求填写环境变量引用。 |
+| 密钥 | DeepSeek 控制台创建的真实 API Key | 直接粘贴到后台密钥框。 |
 | 备注 | 按需填写 | 可以补充模型用途。 |
 
-`env:DEEPSEEK_API_KEY` 表示：调用时由后端读取名为 `DEEPSEEK_API_KEY` 的环境变量。请在启动后端的终端、IDE 运行配置或容器环境中设置实际 Key，并重新启动后端，让进程读取到这个变量。
+真实 Key 统一在 **ruoyi-admin → 模型管理** 中配置。编辑时留空保留原 Key，填写新值会替换原值；保存后新的调用读取最新配置，无需重启后端。
 
-这个引用填在管理端的“密钥”字段中；真实 Key 配置在后端运行环境中。用户端选择模型时，不需要再填写 Key。
+密钥按填写内容保存和使用，不要求固定前缀，也不解析 `env:` 引用。如果已有记录填写了 `env:ATLAS_API_KEY` 等文本，请在此处替换为服务商提供的真实 Key。其他已接入厂商使用同样的配置方式，`ruoyi-web` 无需单独配置 Key。
+
+用户端选择模型时，不需要再填写 Key。
 
 如果上一步配置的是 **PPIO**，在同一个模型表单中改用以下内容：
 
@@ -424,13 +409,13 @@ const options = [...getDictOptions(DictEnum.CHAT_MODEL_CATEGORY)];
 | 模型名称 | 从 PPIO 控制台复制完整模型 ID，例如 `deepseek/deepseek-r1`；以账号当前可用模型为准。 |
 | 模型描述 | `PPIO DeepSeek R1`，也可以填写方便识别的名称。 |
 | 请求地址 | 自动带入 `https://api.ppio.com/openai/v1`。 |
-| 密钥 | `env:PPIO_API_KEY` |
+| 密钥 | 实际 API Key |
 
-在后端的运行环境中设置 `PPIO_API_KEY` 为 PPIO 控制台生成的真实 Key，然后重新启动后端。保存模型后，按[用户端操作](#use-model)选择这个模型发起对话；浏览器中无需配置 PPIO Key。
+将 PPIO 控制台创建的 Key 直接填写到模型密钥框，保存后按[用户端操作](#use-model)选择模型发起对话。
 
 ::: info 使用其他厂商
 
-DeepSeek、PPIO 和两种自定义协议都已支持地址与凭据校验。兼容服务可以按[自定义厂商配置](#custom-provider)接入；其他厂商即使已有适配类，也需要确认凭据策略已支持。开发步骤见[扩展新的厂商](#provider-extension)。
+所有已实现的厂商适配器均使用对应模型保存的 Key。兼容服务可以按[自定义厂商配置](#custom-provider)接入；其他协议按[扩展新的厂商](#provider-extension)增加适配器。
 
 :::
 
@@ -451,7 +436,7 @@ if (getCustomProviderConfig(newProviderCode)) {
 
 编辑已有模型时，`isLoading` 会跳过这段逻辑，保留原地址。需要更新普通聊天模型的地址时，可通过 `PUT /system/model` 提交新 `apiHost`，同时携带模型 ID、厂商编码、模型名和分类等必填字段。
 
-直接通过接口新增模型时也要传入地址，`ChatModelServiceImpl` 不会查询厂商表自动补齐。当前模型保存要求 HTTPS 地址。
+直接通过接口新增模型时，请按对应适配器的要求传入服务地址，`ChatModelServiceImpl` 不会查询厂商表自动补齐。自定义协议支持 HTTP 或 HTTPS 地址。
 
 :::
 
@@ -586,14 +571,14 @@ pnpm run dev
 | 模型表单中找不到刚新增的厂商 | 确认厂商已启用，再关闭并重新打开模型窗口；检查两端的租户和账号权限。 |
 | 模型分类中没有“对话”，或修改后选项未更新 | 在 **系统管理 → 字典管理** 中检查 `chat_model_category` 是否包含键值 `chat`；保存后刷新字典缓存和管理端页面，再打开模型表单。 |
 | 保存或调用模型时提示厂商未配置或已停用 | 到厂商管理中检查相同编码的记录，重新启用厂商，或改用其他已启用厂商的模型。 |
-| 保存模型时提示地址或密钥格式错误 | 当前代码要求 HTTPS 地址和与厂商匹配的环境变量引用；DeepSeek 使用 `env:DEEPSEEK_API_KEY`，PPIO 使用 `env:PPIO_API_KEY`。PPIO 地址填写 `https://api.ppio.com/openai/v1`。 |
+| 后台无法保存模型 | 检查厂商是否启用，以及分类、名称等必填项；密钥直接填写真实 API Key。 |
 | 用户端列表中没有新模型 | 是否已登录、厂商是否启用、模型分类是否为 `chat`，两端是否连接同一后端并处于同一租户。 |
 | 模型列表接口返回权限错误 | 当前接口需要 `system:model:list` 或 `coding:harness:use` 权限，由管理员确认账号授权。 |
 | 修改了厂商地址，调用仍使用旧地址 | 已有模型保存了独立的 `apiHost`，需要更新模型地址。 |
 | 提示“不支持的模型类别” | 模型中的厂商编码是否与适配类的 `getProviderName()` 一致，更新后的后端是否已启动。 |
-| 调用时报环境变量未配置、401 或 403 | 后端进程是否读取到正确的 Key，以及厂商账号的鉴权、权限和额度。 |
+| 调用返回 401 或 403 | 检查模型管理中的 Key，以及厂商账号权限和额度。 |
 | 调用出现 404 或模型不存在 | 实际 API 地址和模型 ID 是否正确。 |
-| 自定义厂商提示地址环境变量未配置或地址不一致 | 检查当前协议的 `CUSTOM_OPENAI_...` 或 `CUSTOM_ANTHROPIC_...` 密钥引用，以及后端对应的 `_BASE_URL` 环境变量；模型请求地址必须与其一致。 |
+| 自定义服务调用失败 | 检查模型中的接口协议、请求地址和 API Key。 |
 | 普通对话成功，智能体调用失败 | 厂商的阻塞客户端是否实现，以及模型是否支持所需的工具调用。 |
 
 ### 模型列表的显示名称 {#model-display}
@@ -631,8 +616,6 @@ domain/vo/chat/ChatModelVo.java
 domain/vo/chat/ChatModelSelectVo.java
 domain/bo/chat/ChatModelBo.java
 domain/bo/chat/ModelBatchKeyBo.java
-security/ChatModelCredentialPolicy.java
-security/ChatModelSecretReference.java
 security/CustomApiCredentialPolicy.java
 ```
 

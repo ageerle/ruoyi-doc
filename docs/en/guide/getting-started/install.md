@@ -547,25 +547,16 @@ To avoid existing services, these screenshots use admin port `15666`, user port 
 
 ## 10. Configure a model and verify your first conversation {#first-chat}
 
-### 10.1 Prepare model-service details {#_10-1-先确认模型服务信息}
+### 10.1 Prepare a service API Key {#_10-1-先确认模型服务信息}
 
-Choose a service supported by the current code and obtain a valid key, model name, and API address. This example uses the existing DeepSeek integration; see [Model management](../features/model.md) for other services.
-
-The current workspace stores credentials as **environment-variable references**. Set the real key in the terminal that starts Java, then restart Java:
-
-```powershell
-$env:DEEPSEEK_API_KEY='替换为你自己的有效Key'
-java "-Dfile.encoding=UTF-8" -jar .\ruoyi-admin\target\ruoyi-admin.jar --spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml
-```
-
-If Java is already running there, stop it with `Ctrl+C` first. The variable is available only to that terminal and its child processes. A different terminal, IDE launch, or computer restart requires configuring the new launch environment. Supply model keys to Java, not to a frontend `.env`.
+Create an API Key in your provider console. Enter it directly in **ruoyi-admin → Chat Management → Model Management**. Model Keys do not need backend environment variables.
 
 ### 10.2 Check the provider and model in the admin console {#_10-2-在管理端检查厂商和模型}
 
 1. Open **Chat Management → Provider Management**. Confirm DeepSeek exists, is enabled, and has code `deepseek`.
 2. Open **Chat Management → Model Management** and search for the model. Edit an existing initialization record if available.
 3. Set the category to **Chat (`chat`)** and use a model name supported by both the service and the current adapter.
-4. Save the credential reference using the current rules and check the address. Other providers require their own credential references.
+4. Enter the real API Key in the model form and check the service address.
 
 ![Model list loaded from the freshly initialized database](/images/install/model-list.png)
 
@@ -576,7 +567,7 @@ If Java is already running there, stop it with `Ctrl+C` first. The variable is a
 | Model name | `deepseek-v4-flash`; confirm your service access and adapter version support it. |
 | Description | For example, `DeepSeek V4 Flash`, displayed in the user app. |
 | Service URL | `https://api.deepseek.com`; check both provider and model settings. |
-| Key | `env:DEEPSEEK_API_KEY`; the real key belongs in the backend launch environment. |
+| Key | The actual API Key from the DeepSeek console. |
 
 ![Existing model form showing provider, category, name, and credential fields](/images/install/model-form.png)
 
@@ -657,7 +648,7 @@ $embedding.embeddings[0].Count
 
 This example should output `384`, the model's vector dimension. See the [Ollama embedding API](https://docs.ollama.com/api/embed).
 
-**A working Ollama API must also satisfy RuoYi AI's model-save rules.** New records require HTTPS. For an Ollama service without authentication, provide a backend-accessible HTTPS endpoint and leave the key field untouched. API clients should omit `apiKey` or send `null`, not an empty string. An authenticated gateway also needs adapter authentication support. See [Knowledge-base model preparation](../features/knowledge.md#prepare-models) and [Model credential rules](../features/model.md#provider-extension). The HTTP check above verifies Ollama itself, not the complete application integration.
+Configure Ollama in ruoyi-admin Model Management using a backend-accessible HTTP or HTTPS address and leave the Key empty when authentication is not required. Use `http://127.0.0.1:11434` when the backend and Ollama run on the same host; container deployments need a container-accessible address. Ollama adapters do not read the Key, so authenticated gateways need adapter support. See [Knowledge-base model preparation](../features/knowledge.md#prepare-models). The HTTP check above verifies Ollama itself; after saving the model, also verify embedding calls in the knowledge base.
 
 Once embeddings are connected, follow [Knowledge management](../features/knowledge.md): create a knowledge base, upload a small file, inspect fragments, test retrieval, and attach it to an agent. Tune hybrid search and reranking after basic retrieval works.
 
@@ -698,7 +689,7 @@ Create a Java Application run configuration:
 | JRE / JDK | JDK 21 used by the project. |
 | Working directory | `D:/Project/github/ruoyi-ai`, replaced with your backend root. |
 | Program arguments | `--spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml`. |
-| Environment variables | Required provider variables, such as `DEEPSEEK_API_KEY`. |
+| Model API Keys | Configure directly in ruoyi-admin Model Management. |
 
 Stop a command-line backend using the same port before clicking Run. After startup, check the endpoint in section 7.3. The IDE does not initialize the database or start either frontend automatically. See [IDEA Application run configuration](https://www.jetbrains.com/help/idea/run-debug-configuration-java-application.html).
 
@@ -724,7 +715,7 @@ docker compose --env-file .dev/.env -f .dev/compose.yml up -d mysql redis
 ```
 
 ```powershell
-# 终端 A：后端。使用模型时，先在此终端设置所需环境变量。
+# 终端 A：后端。模型 Key 在后台管理中配置。
 Set-Location D:\Project\github\ruoyi-ai
 java "-Dfile.encoding=UTF-8" -jar .\ruoyi-admin\target\ruoyi-admin.jar --spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml
 ```
@@ -779,10 +770,16 @@ For knowledge-base use, add `weaviate minio` to the infrastructure service list.
 | Brief blank page on the first user-app visit | Wait for Vite compilation and use the terminal's URL. If it persists, inspect the browser console and frontend logs. |
 | `ERR_PNPM_OUTDATED_LOCKFILE` or missing workspace packages | Install at the repository root with its pnpm version and matching code/lockfile. Do not mix npm installation into the admin workspace. |
 | A model is selectable but gives no answer | Check the backend process's key, model name, provider status, and API response. Example records do not grant service access. |
-| HTTPS validation rejects a new Ollama model | Follow section 11.3. A successful HTTP self-check does not establish application integration. |
+| Ollama self-check succeeds but knowledge-base embedding fails | Check the model category, model name, and backend connectivity to Ollama. Inside a container, `127.0.0.1` refers to that container. |
 | Upload hangs or authentication fails | Check the default store, MinIO address, bucket, and credentials; remove reliance on external example settings. |
 | `Unknown column 'file_hash'` or missing `fid` | Apply the relevant RAG migration after checking scripts and columns in section 5. |
 | SQL agent has no queryable tables | Configure allowed business tables in the [agent guide](../features/agent.md#sql-config). This is separate from basic login. |
+
+### Tenant expiration dates
+
+With `tenant.enable: true`, a super administrator with tenant-management permission can create tenants. The `expireTime` field in `POST /system/tenant` uses `yyyy-MM-dd HH:mm:ss`, for example `2027-09-11 00:00:00`; omit it or send `null` for no expiration. Dates without a timezone use the backend runtime timezone. Supply an existing package ID as `packageId`, preferably as a string to preserve large-integer precision in browsers.
+
+The backend uses Spring's configured Jackson builder to retain global date formatting and custom modules. Preserve those settings when extending `ObjectMapper` so tenant requests and workflow JSON keep consistent serialization behavior.
 
 ## 15. Confirm installation is complete {#verification}
 

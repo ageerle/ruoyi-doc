@@ -102,7 +102,7 @@ pnpm run dev --port 5180
 Ollama 的启动、模型下载步骤见[安装页的本地向量模型示例](../getting-started/install.md)。如果后端运行在容器里，应填写后端容器能够访问的地址；容器内的 `127.0.0.1` 指向容器自身。
 
 ::: warning 新配置需要先满足当前模型保存规则
-当前源码的 `ChatModelCredentialPolicy.requirePersistableConfiguration()` 会统一校验 HTTPS，因此不能直接把上表的 `http://127.0.0.1:11434` 当作新模型地址保存。已有可用模型可以继续用于知识库验证；新建无需鉴权的 Ollama 模型时，准备后端可访问的 HTTPS 地址，并保持密钥字段未填写。通过 API 创建时省略 `apiKey` 或传 `null`，不要传空字符串。Ollama 的向量适配器不读取 Key；如果网关要求认证，还需扩展适配器，不能仅更换地址。云 embedding 厂商也需要对应凭据规则，详见[模型管理](./model.md#provider-extension)。
+本地 Ollama 可以使用后端可访问的 HTTP 或 HTTPS 地址，无需鉴权时密钥留空。Ollama 的向量适配器不读取 Key；需要认证的网关仍需适配器支持。千问等云端向量模型的真实 API Key 直接填写在 ruoyi-admin 的模型管理中，详见[模型管理](./model.md#configure-model)。
 
 模型出现在下拉列表，只说明管理端查到了配置；本地模型仍需要服务已启动、模型已下载，云模型也需要凭据与实际调用适配器匹配。
 :::

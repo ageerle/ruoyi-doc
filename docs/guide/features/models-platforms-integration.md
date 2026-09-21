@@ -5,7 +5,7 @@ pageClass: platforms-guide
 
 # 模型与外部平台接入
 
-RuoYi AI 可通过兼容接口接入 **FastGPT、RAGFlow**，以及其他提供 **OpenAI Chat Completions** 或 **Anthropic Messages** 接口的平台。项目也提供 **Dify、Coze（扣子）** 的专用适配代码，但当前版本需要补齐厂商选项和凭据接入后才能使用。
+RuoYi AI 可通过兼容接口接入 **FastGPT、RAGFlow**，以及其他提供 **OpenAI Chat Completions** 或 **Anthropic Messages** 接口的平台。项目也提供 **Dify、Coze（扣子）** 的专用适配代码，在模型管理中直接填写对应应用的 Key 即可配置。
 
 ## 支持的平台与接入方式 {#supported-platforms}
 
@@ -15,8 +15,8 @@ RuoYi AI 可通过兼容接口接入 **FastGPT、RAGFlow**，以及其他提供 
 | --- | --- | --- |
 | **FastGPT** | 使用 OpenAI 兼容接口，选择 `custom_api`；通过应用 API Key 与 App ID 指定应用。 | [准备 FastGPT 应用](#prepare-fastgpt) → [添加模型](#configure-model)。 |
 | **RAGFlow** | 使用聊天助手的 OpenAI 兼容接口，选择 `custom_api`；请求地址中包含 Chat ID。 | [RAGFlow 接入](#ragflow)。 |
-| **Dify** | 使用 Dify App API，厂商编码为 `dify`；已有适配代码，需先补齐厂商选项和凭据支持。 | [Dify 接入](#dify)。 |
-| **Coze / 扣子** | 使用 Coze Bot API，厂商编码为 `coze`；已有适配代码，需先补齐厂商选项和凭据支持。 | [Coze 接入](#coze)。 |
+| **Dify** | 使用 Dify App API，厂商编码为 `dify`；选择该厂商并直接填写对应应用的 Key。 | [Dify 接入](#dify)。 |
+| **Coze / 扣子** | 使用 Coze Bot API，厂商编码为 `coze`；选择该厂商并直接填写对应应用的 Key。 | [Coze 接入](#coze)。 |
 | **其他 OpenAI 兼容平台** | 选择 `custom_api`，使用目标服务提供的地址、模型名与凭据；需确认接口兼容。 | [选择协议](#configure-provider) → [添加模型](#configure-model)。 |
 | **Anthropic 兼容服务** | 选择 `custom_anthropic`，调用 Messages 接口；需确认接口兼容。 | [Anthropic 兼容服务接入](#anthropic-platforms)。 |
 
@@ -38,7 +38,7 @@ pnpm run dev:antd
 
 项目路径替换为你的实际目录，已经安装依赖时可以跳过 `pnpm install`。打开终端显示的地址，默认是 [http://localhost:5666](http://localhost:5666)，登录后展开左侧的 **对话管理**。
 
-接下来会用到两个页面：**厂商管理**决定使用哪一种接口协议，**模型管理**填写具体应用的地址、模型名和密钥引用。两者需要连接同一个后端；当前管理端开发代理默认指向 `http://127.0.0.1:6039`。
+接下来会用到两个页面：**厂商管理**决定使用哪一种接口协议，**模型管理**填写具体应用的地址、模型名和API Key。两者需要连接同一个后端；当前管理端开发代理默认指向 `http://127.0.0.1:6039`。
 
 如果刚升级了自定义协议功能，请先重新构建并启动更新后的后端与管理端，再进行下面的配置。
 
@@ -56,7 +56,7 @@ pnpm run dev:antd
 | --- | --- | --- |
 | OpenAI Chat Completions 兼容接口，例如 FastGPT、RAGFlow 的兼容接口 | 自定义 OpenAI，`custom_api` | Bearer 鉴权，调用 `/chat/completions` |
 | Anthropic Messages 兼容接口 | 自定义 Anthropic，`custom_anthropic` | `x-api-key` 鉴权，调用 `/messages` |
-| Dify App API、Coze Bot API | 专用适配，见[第 6 节](#native-platforms) | 使用各自的平台协议；当前还需要补齐凭据接入 |
+| Dify App API、Coze Bot API | 专用适配，见[第 6 节](#native-platforms) | 选择对应厂商，在模型管理中填写应用 Key。 |
 
 ::: tip 使用旧数据时
 
@@ -83,7 +83,7 @@ pnpm run dev:antd
 
 点击 **确认** 保存后，回到列表检查编码和状态。同一租户内只能有一条未删除的同编码厂商记录；如果提示编码重复，直接使用已有记录。
 
-**多个 OpenAI 兼容平台可以共用这条厂商记录。** 例如，FastGPT 和 RAGFlow 都选择 `custom_api`，各自在模型管理中配置不同地址和密钥引用。选择自定义厂商时，模型表单会清空请求地址，要求你手动填写。
+**多个 OpenAI 兼容平台可以共用这条厂商记录。** 例如，FastGPT 和 RAGFlow 都选择 `custom_api`，各自在模型管理中配置不同地址和API Key。选择自定义厂商时，模型表单会清空请求地址，要求你手动填写。
 
 ::: details 厂商配置如何找到接入代码
 
@@ -115,26 +115,9 @@ AbstractChatService service =
 
 FastGPT 支持将鉴权值组合为 `<API_KEY>-<APP_ID>`，这样通用 OpenAI 客户端无需在请求体中另传 `appId`。FastGPT 实际使用的模型由应用编排决定，RuoYi AI 中可以把这条配置命名为 `fastgpt-app`。依据：[FastGPT 对话接口](https://doc.fastgpt.io/zh-CN/openapi/chat)。
 
-### 3.2 把地址和密钥配置到后端进程
+### 3.2 在模型管理中填写地址和 Key
 
-在启动 **RuoYi AI 后端**的终端、IDE 运行配置或容器环境中，配置这一对环境变量：
-
-```text
-CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1
-CUSTOM_OPENAI_FASTGPT_API_KEY=<API_KEY>-<APP_ID>
-```
-
-上面的域名、API Key 和 App ID 都要替换。Windows 源码开发可以在启动后端的 PowerShell 中设置：
-
-```powershell
-$env:CUSTOM_OPENAI_FASTGPT_BASE_URL = 'https://fastgpt.example.com/api/v1'
-$env:CUSTOM_OPENAI_FASTGPT_API_KEY = '<API_KEY>-<APP_ID>'
-# 接着在这个终端中启动后端，或将同样的变量配置到 IDE 的后端运行配置。
-```
-
-**已经运行的后端需要重启才能读取新变量。** 在另一个终端设置变量，或只修改前端的 `.env`，不会让正在运行的 Java 进程获得这些值。
-
-模型表单稍后填写 `env:CUSTOM_OPENAI_FASTGPT_API_KEY`。其中 `env:` 表示引用，真正的密钥保存在后端环境中。后端会把 `_API_KEY` 换成 `_BASE_URL`，查找与这份凭据配套的地址；保存和调用时都要求它与模型中的请求地址一致。
+在 ruoyi-admin 中填写 FastGPT 服务基础地址，将 `<API_KEY>-<APP_ID>` 组合值直接填入模型密钥框。无需配置后端环境变量或重启后端。
 
 ### 3.3 先确认平台接口能够独立调用
 
@@ -180,13 +163,13 @@ curl --no-buffer --fail-with-body \
 | 模型分类 | 对话 | 保存的值是 `chat`。 |
 | 模型名称 | `fastgpt-app` | 在 RuoYi AI 内识别这条配置，并作为请求的 `model` 字段发送。避免与同租户其他模型重名。 |
 | 模型描述 | `FastGPT 知识库助手` | 用户端优先显示这个名称，便于用户选择。 |
-| 请求地址 | `https://fastgpt.example.com/api/v1` | 与 `CUSTOM_OPENAI_FASTGPT_BASE_URL` 一致。 |
-| 密钥 | `env:CUSTOM_OPENAI_FASTGPT_API_KEY` | 填引用，实际值已在后端配置。 |
+| 请求地址 | `https://fastgpt.example.com/api/v1` | 替换为实际服务地址。 |
+| 密钥 | `<API_KEY>-<APP_ID>` | 直接填写真实组合值。 |
 | 备注 | 按需填写 | 可以记录对应应用的用途。 |
 
-![真实模型新增表单，演示 FastGPT 的协议、分类、请求地址和密钥引用](/images/platforms/fastgpt-model-form.png)
+![真实模型新增表单，演示 FastGPT 的协议、分类、请求地址和API Key](/images/platforms/fastgpt-model-form.png)
 
-图中使用示例域名，表单未提交。实际保存前，请换成自己的地址，并完成后端环境变量配置。
+图中使用示例域名，表单未提交。实际保存前，请换成自己的地址，并填写真实应用 Key。
 
 “请求地址”填写的是 **API 基础地址（Base URL）**。当前 OpenAI 客户端会在其后追加 `/chat/completions`，因此上面的配置最终请求：
 
@@ -200,7 +183,7 @@ https://fastgpt.example.com/api/v1/chat/completions
 
 点击 **确认**，检查模型列表中是否出现 `fastgpt-app`，供应商是否正确，分类是否为“对话”。保存成功表示配置通过校验，下一步还需要实际发送消息。
 
-如果提示缺少 `CUSTOM_OPENAI_FASTGPT_BASE_URL`，回到第 3 节检查 **Java 进程**的环境变量；如果提示地址不一致，核对模型地址和配套的 `_BASE_URL`。编辑自定义模型时，密钥留空可以保留原引用。
+检查保存的地址和应用 Key 是否正确。编辑模型时密钥留空保留原值，填写新 Key 则替换原值。
 
 ### 4.4 RAGFlow 接入 {#ragflow}
 
@@ -212,11 +195,9 @@ RAGFlow 使用聊天助手的 OpenAI 兼容接口，配置入口与 FastGPT 相�
 | 模型分类 | 对话（`chat`）。 |
 | 模型名称 | 按目标版本的 API 文档填写有效模型名。 |
 | 请求地址 | `https://ragflow.example.com/api/v1/openai/<CHAT_ID>`。 |
-| 模型中的密钥 | `env:CUSTOM_OPENAI_RAGFLOW_API_KEY`。 |
-| 后端密钥变量 | `CUSTOM_OPENAI_RAGFLOW_API_KEY`，保存 RAGFlow API Key。 |
-| 后端地址变量 | `CUSTOM_OPENAI_RAGFLOW_BASE_URL`，与模型中的请求地址一致。 |
+| 模型中的密钥 | 服务商提供的真实 API Key。 |
 
-将示例域名和 `<CHAT_ID>` 替换为实际值，在后端配置好环境变量并重启，然后保存模型。最终请求路径是 `/api/v1/openai/<CHAT_ID>/chat/completions`，因此本项目的基础地址不要额外保留末尾 `/chat`。模型名和兼容路径以部署版本自带的 API 文档为准，参考 [RAGFlow OpenAI-Compatible API](https://ragflow.io/docs/http_api_reference#openai-compatible-api)。保存后按[第 5 节](#verify-chat)在用户端选择该模型验证。
+将示例域名和 `<CHAT_ID>` 替换为实际值，在模型管理中填写真实 Key 并保存。最终请求路径是 `/api/v1/openai/<CHAT_ID>/chat/completions`，因此本项目的基础地址不要额外保留末尾 `/chat`。模型名和兼容路径以部署版本自带的 API 文档为准，参考 [RAGFlow OpenAI-Compatible API](https://ragflow.io/docs/http_api_reference#openai-compatible-api)。保存后按[第 5 节](#verify-chat)在用户端选择该模型验证。
 
 ### 4.5 Anthropic 兼容服务接入 {#anthropic-platforms}
 
@@ -228,13 +209,11 @@ RAGFlow 使用聊天助手的 OpenAI 兼容接口，配置入口与 FastGPT 相�
 | 模型分类 | 对话（`chat`）。 |
 | 模型名称 | 服务提供方公布的模型 ID。 |
 | 请求地址 | 例如 `https://gateway.example.com/v1`，替换为实际基础地址。 |
-| 模型中的密钥 | `env:CUSTOM_ANTHROPIC_GATEWAY_API_KEY`。 |
-| 后端密钥变量 | `CUSTOM_ANTHROPIC_GATEWAY_API_KEY`，保存该服务的密钥。 |
-| 后端地址变量 | `CUSTOM_ANTHROPIC_GATEWAY_BASE_URL`，与模型中的请求地址一致。 |
+| 模型中的密钥 | 服务商提供的真实 API Key。 |
 
-在后端配置好环境变量并重启，再保存模型。后端使用 Anthropic 客户端发送 `x-api-key` 和版本请求头；示例地址最终请求 `/v1/messages`，不能把 OpenAI 的 `/chat/completions` 地址直接填到这里。完整配置与 curl 示例见[选择自定义厂商协议](./model.md#custom-provider)，用户端验证见[第 5 节](#verify-chat)。
+在模型管理中填写真实 Key 并保存。后端使用 Anthropic 客户端发送 `x-api-key` 和版本请求头；示例地址最终请求 `/v1/messages`，不能把 OpenAI 的 `/chat/completions` 地址直接填到这里。完整配置与 curl 示例见[选择自定义厂商协议](./model.md#custom-provider)，用户端验证见[第 5 节](#verify-chat)。
 
-这两类自定义协议当前都要求 HTTPS 地址。同一个协议下的不同平台共用厂商记录，各模型分别填写地址；停用这条厂商记录会同时影响其下的模型。
+这两类自定义协议支持 HTTP 或 HTTPS 地址。同一个协议下的不同平台共用厂商记录，各模型分别填写地址；停用这条厂商记录会同时影响其下的模型。
 
 ## 5. 到用户端选择模型并发起对话 {#verify-chat}
 
@@ -287,33 +266,33 @@ pnpm run dev --port 5180
 }
 ```
 
-实际请求还包含会话 ID 等字段。后端读取该模型的 `providerCode`、`apiHost` 和密钥引用，再调用对应客户端。用户端无需配置第三方平台的 API Key。
+实际请求还包含会话 ID 等字段。后端读取该模型的 `providerCode`、`apiHost` 和API Key，再调用对应客户端。用户端无需配置第三方平台的 API Key。
 
 :::
 
 ## 6. Dify、Coze 当前怎样接入 {#native-platforms}
 
-这两个平台使用专用聊天协议。仓库已有 `DifyChatServiceImpl` 和 `CozeChatServiceImpl`，但当前统一凭据策略还未支持它们的厂商凭据，管理端新增厂商的静态选项中也没有 `dify`、`coze`。**现阶段需要先补齐接入代码，不能只在模型里填入平台 Key 就使用。**
+Dify、Coze 使用专用聊天适配器。启用对应厂商后，在模型管理中直接填写应用 API Key 或访问 Token。
 
 ### 6.1 Dify 接入 {#dify}
 
 1. 在 Dify 创建并发布聊天应用，在应用内生成 **App API Key**，取得服务 API 地址；先用官方 API 验证应用可用。
-2. 按[扩展步骤](#extend-provider)补齐 `dify` 厂商选项、凭据引用和地址绑定，再配置模型。`apiHost` 通常为 `https://api.dify.ai/v1` 或自建地址，模型名称是 RuoYi AI 内部配置名。
-3. 完成代码接入并重启后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见 [Dify API 入门](https://docs.dify.ai/en/api-reference/guides/get-started)。
+2. 启用 `dify` 厂商，填写 `https://api.dify.ai/v1` 或自建服务 API 地址，模型名称使用本地配置名，密钥框直接填写应用 API Key。
+3. 保存模型后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见 [Dify API 入门](https://docs.dify.ai/en/api-reference/guides/get-started)。
 
 `DifyChatServiceImpl` 将当前消息和历史上下文拼成 `query`，`inputs` 固定为空对象；流式调用解析 Dify 事件，完整响应调用使用 `blocking` 模式。依赖自定义必填 `inputs` 的应用，还需要补字段映射。`message_replace` 只能影响最终保存的内容，无法替换已经发给前端的片段。
 
 ### 6.2 Coze / 扣子接入 {#coze}
 
 1. 将 Coze Bot 发布为 API 服务，取得 **Bot ID**，并配置有聊天权限的访问 Token；先用官方 API 验证 Bot 可用。
-2. 按[扩展步骤](#extend-provider)补齐 `coze` 厂商选项、凭据引用和地址绑定，再配置模型。**模型名称填写 Bot ID**，中国区 Host 为 `https://api.coze.cn`，Host、Bot 和 Token 要属于同一区域。
-3. 完成代码接入并重启后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见[扣子 SDK 快速开始](https://docs.coze.cn/developer_guides_python_getting_started)。
+2. 启用 `coze` 厂商，密钥框直接填写访问 Token。模型名称填写 Bot ID；中国区 Host 为 `https://api.coze.cn`，Host、Bot 和 Token 要属于同一区域。
+3. 保存模型后，在用户端选择该模型，按[第 5 节](#verify-chat)验证回答、追问和会话记录。平台侧说明见[扣子 SDK 快速开始](https://docs.coze.cn/developer_guides_python_getting_started)。
 
 `CozeChatServiceImpl` 把模型名称作为 `botID`，由 RuoYi AI 传递历史消息，设置 `autoSaveHistory=false`。完整响应模式也通过消费 Coze 的流式事件聚合答案实现。
 
 ### 6.3 两个平台共用的接入条件
 
-两个适配类最终都会调用 `resolveApiKeyForConfiguredEndpoint()`。因此增加选项或数据库记录后，还必须扩展 `ChatModelCredentialPolicy` 和 `ChatModelSecretReference`，让保存与调用使用同一套厂商凭据规则。
+两个适配器均使用模型管理中保存的 Key，不同模型可以填写不同应用或 Bot 的凭据。
 
 不要把 Dify `/chat-messages` 或 Coze `/v3/chat` 地址直接填给 `custom_api`。如果通过网关转换协议，应先验证网关确实提供 OpenAI 或 Anthropic 兼容接口，再按本页的自定义协议流程配置。
 
@@ -323,10 +302,6 @@ pnpm run dev --port 5180
 | --- | --- |
 | 模型表单找不到供应商 | 在同租户的厂商管理中确认记录存在且已启用，再重新打开模型表单。 |
 | “模型分类”没有“对话” | 检查 `chat_model_category` 字典中的 `chat`，刷新字典缓存和页面。 |
-| 保存时提示缺少地址环境变量 | 把对应的 `_BASE_URL` 配置到后端进程环境中，并重新启动后端。 |
-| 提示请求地址与密钥绑定地址不一致 | 核对模型的请求地址及同一凭据前缀的 `_BASE_URL`，包括路径。 |
-| 提示密钥引用不允许或协议不匹配 | OpenAI 使用 `env:CUSTOM_OPENAI_…_API_KEY`，Anthropic 使用 `env:CUSTOM_ANTHROPIC_…_API_KEY`；不要填明文或其他厂商的引用。 |
-| 保存成功，调用时提示环境变量未配置 | 地址校验已通过，但实际 Key 变量缺失或为空；检查 Java 进程能否读取 `_API_KEY`。 |
 | 401 / 403 | 回到平台检查 Key、权限、区域和应用授权；FastGPT 还要检查 Key 与 App ID 的组合。 |
 | 404 | 对照平台文档检查最终接口路径；FastGPT 通常为 `/api/v1/chat/completions`，RAGFlow 路径还包含 Chat ID。 |
 | 用户端找不到模型 | 检查账号租户、模型分类是否为 `chat`、厂商是否启用，然后重新展开模型列表。 |
@@ -340,12 +315,12 @@ pnpm run dev --port 5180
 
 1. 在 `ChatModeType` 中定义唯一厂商编码，实现 `AbstractChatService`，并用 `@Service` 注册。`getProviderName()` 返回同一编码，工厂会自动收集实现。
 2. 实现 `buildStreamingChatModel()` 和 `buildChatModel()`，完成请求字段、鉴权、完整响应和流式事件的转换。
-3. 在 `ChatModelSecretReference`、`ChatModelCredentialPolicy` 中支持该厂商独立的凭据引用和可信地址。配置保存、批量更新密钥和实际调用要使用一致的校验规则。
+3. 通过 `ChatModelVo.getApiKey()` 读取模型配置中的 Key，并传递给服务客户端。
 4. 在管理端 `apps/web-antd/src/views/chat/provider/options.ts` 中增加厂商选项；有专用配置字段时，继续补齐模型表单、后端字段和持久化。
 5. 覆盖正常回答、鉴权失败、空响应、超时和流中断的测试，重新构建并启动后端。
 6. 回到本页，从厂商配置、模型配置到用户端对话走完一遍，再验证智能体或编排中的使用。
 
-后端适配类位于 `ruoyi-modules/ruoyi-chat/src/main/java/org/ruoyi/service/chat/impl/provider/`，凭据规则位于 `ruoyi-common/ruoyi-common-chat/src/main/java/org/ruoyi/common/chat/security/`。
+后端适配类位于 `ruoyi-modules/ruoyi-chat/src/main/java/org/ruoyi/service/chat/impl/provider/`，
 
 <style>
 .platforms-guide .vp-doc table {

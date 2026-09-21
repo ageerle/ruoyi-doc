@@ -45,7 +45,7 @@ Verify HTTP 200, SSE for a streaming request, content from the correct applicati
 
 Open **Chat Management → Model Management → Add**.
 
-First set `CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1` and `CUSTOM_OPENAI_FASTGPT_API_KEY=<FASTGPT_API_KEY>-<APP_ID>` in the backend's startup environment, replacing the domain and credentials, then restart Java. See [Platform credential setup](../features/models-platforms-integration.md#prepare-fastgpt) for the PowerShell example.
+Enter the FastGPT base URL and the combined `<FASTGPT_API_KEY>-<APP_ID>` value directly in Model Management. No deployment variables are needed.
 
 | Field | Value |
 | --- | --- |
@@ -53,13 +53,13 @@ First set `CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1` an
 | Category | Chat |
 | Model name | `fastgpt-app`; FastGPT application orchestration selects the actual model |
 | Description | A recognizable application name |
-| Base URL | `https://fastgpt.example.com/api/v1`, matching the paired environment variable |
-| Key | `env:CUSTOM_OPENAI_FASTGPT_API_KEY`; the form stores only the reference |
+| Base URL | `https://fastgpt.example.com/api/v1`, replaced with your service address |
+| Key | The actual `<FASTGPT_API_KEY>-<APP_ID>` value |
 
-Use an HTTPS base URL without `/chat/completions`; the LangChain4j OpenAI client appends it. Current save rules reject HTTP and plaintext keys. The address must be reachable by the backend and match its paired credential configuration; see [Model Management](../features/model.md).
+Use the base URL without `/chat/completions`; the OpenAI client appends that path. The service must be reachable by the backend.
 
 ::: danger Application selection in the key
-Generic `custom_api` cannot add FastGPT's `appId` to the request body. Store the combined `<apiKey>-<appId>` value in the backend environment and put only its `env:` reference in the form. If your FastGPT version lacks this format, a dedicated provider is required; the admin fields alone cannot supply the missing request property.
+Generic `custom_api` cannot add FastGPT's `appId` to the request body. Enter the combined `<apiKey>-<appId>` value directly as the model Key. A FastGPT version that lacks this format requires a dedicated adapter.
 :::
 
 ## 4. Verify in RuoYi AI {#_4-在-ruoyi-ai-验证}

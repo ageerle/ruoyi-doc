@@ -16,7 +16,7 @@ RuoYi AI provides image generation, text-to-speech, and video generation APIs, w
 | **Video generation** | Submit a scene and camera description, then query the generated video. | **Video generation** or `POST /media/video`. |
 | **Task lookup and previews** | Check asynchronous progress, preview images, play audio/video, and save results or task IDs. | Result panel, **Current tasks**, and **Query existing task**. |
 
-Configure an enabled `atlas` provider, media models, and the backend environment variable before using Atlas Cloud. See [Credential requirements](#credential-readiness) and [Media examples](#media-examples). Optional parameters and query methods also depend on the provider.
+Configure an enabled `atlas` provider, media models, and the actual API Key in the admin console before using Atlas Cloud. See [Credential requirements](#credential-readiness) and [Media examples](#media-examples). Optional parameters and query methods also depend on the provider.
 
 Image attachments in ordinary chat currently support only local previews, without image understanding or OCR. The workspace does not yet offer reference-image uploads or image editing. See [Chat attachments and extension](#chat-attachments).
 
@@ -104,21 +104,17 @@ These are the **adapter mappings currently in code**; credential readiness must 
 
 `custom_anthropic` has no media-generation adapter. Working chat providers such as DeepSeek, PPIO, or Ollama do not imply media support.
 
-If Atlas Cloud is missing, check for an enabled `atlas` provider in the current tenant. The admin's static Add Provider options currently omit `atlas` and `Tongyiwanx`. A fresh environment must add them in `ruoyi-admin/apps/web-antd/src/views/chat/provider/options.ts` before creating records. The screenshots use an existing Atlas provider.
+If Atlas Cloud is missing, create and enable the `atlas` provider in the same tenant before adding a model.
 
 ### 2.2 Requirements before calling a provider {#credential-readiness}
 
-For Atlas Cloud, use provider `atlas`, base URL `https://api.atlascloud.ai/v1`, and model credential `env:ATLAS_API_KEY`. Inject the actual key into the **Java process environment** as `ATLAS_API_KEY`, then restart Java. Never put it into the frontend environment, source control, or screenshots.
+In ruoyi-admin Model Management, select the enabled `atlas` provider, set the base URL to `https://api.atlascloud.ai/v1`, and enter the actual Atlas API Key. Each media model uses its saved Key; no environment variable is required.
 
-Save-time and call-time checks bind this reference to the Atlas provider and official HTTPS origin. Allowed base paths are empty, `/v1`, and `/api/v1`, with an optional trailing slash. Custom domains, ports, query parameters, and other providers' references are rejected.
-
-::: warning Other providers
-The configuration examples use `atlas`. `openai` and `Tongyiwanx` require their own media credential configuration. The `custom_api` media fallback has a credential-consumer mismatch with `openai`; Atlas settings cannot be reused directly.
-:::
+For another provider, use its implemented media adapter, service URL and API Key. Saving a model does not by itself confirm remote model availability.
 
 ### 2.3 Start on a temporary port {#temporary-port}
 
-With `ATLAS_API_KEY` already set in the launch environment, run:
+Configure the model Key in the admin console. To start the backend, run:
 
 ```powershell
 Set-Location D:\Project\github\ruoyi-ai
@@ -167,10 +163,10 @@ Return to **Chat Management → Model Management** and edit an existing row or a
 | Model name | `openai/gpt-image-2/text-to-image` | Actual service model ID, also sent as request `model`. |
 | Description | GPT-IMAGE-2 text-to-image | Display name; does not replace the API model name. |
 | Request address | `https://api.atlascloud.ai/v1` | Base URL; the adapter constructs the endpoint. |
-| Key | Not returned in the edit form | Use `env:ATLAS_API_KEY` for Atlas. |
+| Key | Not returned in the edit form | Use the actual Atlas API Key for Atlas. |
 | Notes | Model-purpose description | Maintenance text, not generation parameters. |
 
-Selecting a regular provider copies its address into the model form. If the provider address changes later, check existing model addresses too. Configure the backend environment variable before saving a usable model, then verify provider, category, and model name in the list.
+Selecting a regular provider copies its address into the model form. If the provider address changes later, check existing model addresses too. Enter the actual API Key and save, then verify provider, category, and model name in the list.
 
 ::: details How endpoints are constructed
 - OpenAI media uses `OpenAiMediaSupport.endpoint()` for `/v1/images/generations`, `/v1/audio/speech`, and `/v1/videos`, avoiding duplicate `/v1`.
@@ -448,7 +444,7 @@ if ("atlas".equals(model.getProviderCode())) {
 return R.ok(toImageResponse(service.generateImage(context)));
 ```
 
-It looks up the model, checks its category, selects an implementation by provider, and converts the result. A new media provider needs options, credential rules, service implementations, and result parsing together.
+It looks up the model, checks its category, selects an implementation by provider, and converts the result. A new media provider needs options, a service implementation, and result parsing. Its client reads the API Key saved for the model.
 
 | Area | Code location in `ruoyi-ai` |
 | --- | --- |
@@ -456,7 +452,7 @@ It looks up the model, checks its category, selects an implementation by provide
 | Provider implementations | That module's `service/image/provider/`, `service/audio/provider/`, `service/video/provider/`. |
 | Endpoint construction and Atlas lookup | That module's `service/media/`. |
 | Service selection | Three media factories under `ruoyi-common/ruoyi-common-chat/src/main/java/org/ruoyi/common/chat/factory/`. |
-| References and address validation | The common module's `security/ChatModelSecretReference.java`, `ChatModelCredentialPolicy.java`, and `CustomApiCredentialPolicy.java`. |
+| Model API Key | Entered in ruoyi-admin Model Management and read by adapters through `ChatModelVo.getApiKey()`. |
 
 For multimodal knowledge bases, `AliBaiLianMultiEmbeddingProvider` supports text, images, video, and combined inputs, but document ingestion does not call `embedMultiModal` yet. Media ingestion and retrieval require further work.
 
@@ -468,8 +464,7 @@ Coding Harness has its own image persistence and `ImageContent` construction. Us
 | --- | --- |
 | Provider missing | Enabled status and tenant; fresh Atlas/Wanxiang setups need static admin options. |
 | Wrong or stale categories | `chat_model_category` labels, values, and cache; reopen the form. |
-| Credential save fails or is untrusted | [Provider rules, references, and URL binding](#credential-readiness). |
-| `Credential consumer does not match the configured provider` | `custom_api` fallback to `openai`; align adapter identity and credential policy. |
+| Model save or authentication fails | Check the enabled provider, required fields, and the API Key saved in Model Management. |
 | Model not found or generic exception | Exact name, category, enabled provider, and server logs. |
 | Unauthenticated or forbidden RuoYi response | Login token, matching `Clientid`, and permissions. |
 | Provider authentication failure | Confirm the request reached the provider, then check key, media access, and account status. |

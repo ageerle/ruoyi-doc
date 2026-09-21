@@ -549,25 +549,16 @@ pnpm run dev --port 5180 --strictPort
 
 ## 10. 配置模型，验证第一条对话 {#first-chat}
 
-### 10.1 先确认模型服务信息
+### 10.1 准备服务商 API Key
 
-准备一个当前代码支持的模型服务，取得有效 Key、模型名称和接口地址。下面以项目已有的 DeepSeek 接入为例；其他服务的完整配置见[模型管理](../features/model.md)。
-
-当前工作区使用 **环境变量引用**保存模型凭据。在启动 Java 的终端中设置真实 Key，再重启 Java 进程：
-
-```powershell
-$env:DEEPSEEK_API_KEY='替换为你自己的有效Key'
-java "-Dfile.encoding=UTF-8" -jar .\ruoyi-admin\target\ruoyi-admin.jar --spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml
-```
-
-若后端已经在该终端运行，先按 `Ctrl+C` 停止，再设置变量并启动。环境变量只对当前终端及其启动的进程生效；换终端、改用 IDE 或重启电脑后，需要在新的启动环境中重新配置。模型 Key 应提供给 Java 后端，不要填到前端的 `.env`。
+在服务商控制台创建有效 API Key，然后在 **ruoyi-admin → 对话管理 → 模型管理** 中直接填写并保存。模型密钥无需配置到后端环境变量。
 
 ### 10.2 在管理端检查厂商和模型
 
 1. 打开 **对话管理 → 厂商管理**，确认 DeepSeek 厂商存在且已启用，编码为 `deepseek`。
 2. 打开 **对话管理 → 模型管理**，搜索目标模型。初始化 SQL 可能已经包含记录，已有时编辑检查即可。
 3. 确认模型分类为 **对话（`chat`）**，模型名称与服务端及当前适配器要求一致。
-4. 按当前凭据规则保存密钥引用，并确认地址正确。其他厂商不要直接复用 DeepSeek 的引用。
+4. 在模型密钥框直接填写真实 API Key，并确认服务地址正确。
 
 ![本次新数据库初始化后，管理端模型列表正常加载](/images/install/model-list.png)
 
@@ -578,7 +569,7 @@ java "-Dfile.encoding=UTF-8" -jar .\ruoyi-admin\target\ruoyi-admin.jar --spring.
 | 模型名称 | `deepseek-v4-flash`；需确认你的服务权限与当前接入版本支持它。 |
 | 模型描述 | 例如 `DeepSeek V4 Flash`，用于用户端展示。 |
 | 服务地址 | `https://api.deepseek.com`，按厂商与模型配置核对。 |
-| 密钥 | `env:DEEPSEEK_API_KEY`。真正的 Key 已配置在后端启动环境中。 |
+| 密钥 | DeepSeek 控制台创建的真实 API Key，直接填写。 |
 
 ![本次打开已有模型编辑表单，查看供应商、分类、名称和密钥字段](/images/install/model-form.png)
 
@@ -659,7 +650,7 @@ $embedding.embeddings[0].Count
 
 该样例预期输出 `384`，对应模型维度。安装及接口说明见 [Ollama 官方文档](https://docs.ollama.com/api/embed)。
 
-**Ollama 接口成功，还需要满足 RuoYi AI 的模型保存规则。** 当前工作区新建模型统一校验 HTTPS，不能直接保存 `http://127.0.0.1:11434`。无需鉴权的 Ollama 需提供后端可访问的 HTTPS 地址，并保持密钥字段未填写；通过 API 创建时省略 `apiKey` 或传 `null`，不要传空字符串。若网关要求认证，还需扩展适配器的认证支持。详见[知识库的模型准备](../features/knowledge.md#prepare-models)与[模型凭据说明](../features/model.md#provider-extension)。这条 HTTP 自检只验证 Ollama 本身。
+在 ruoyi-admin 的模型管理中配置 Ollama，地址填写后端可访问的 HTTP 或 HTTPS 地址，无需鉴权时密钥留空。`http://127.0.0.1:11434` 适用于后端与 Ollama 运行在同一主机的场景；容器部署请填写容器可访问的地址。Ollama 适配器不读取 Key，认证网关需要相应的适配器支持。详见[知识库的模型准备](../features/knowledge.md#prepare-models)。上面的 HTTP 自检验证 Ollama 本身，保存模型后还需在知识库中验证向量调用。
 
 向量模型接入后，继续按[知识库使用指南](../features/knowledge.md)完成：创建知识库、上传小文件、核对片段、检索测试，再关联智能体问答。混合检索、重排等参数可以在基础检索通过后调整。
 
@@ -700,7 +691,7 @@ ruoyi-admin/src/main/java/org/ruoyi/RuoYiAIApplication.java
 | JRE / JDK | 项目使用的 JDK 21。 |
 | Working directory | `D:/Project/github/ruoyi-ai`，替换为你的后端根目录。 |
 | Program arguments | `--spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml`。 |
-| Environment variables | 按需配置模型服务变量，如 `DEEPSEEK_API_KEY`。 |
+| 模型 API Key | 统一在 ruoyi-admin 的模型管理中直接填写。 |
 
 先停止命令行中同端口的后端，再点击 Run，避免两个进程争用 `6039`。IDE 启动成功后仍按第 7.3 节检查接口；使用 IDE 不会替代数据库初始化，也不会自动启动两个前端。字段位置参考 [IDEA Application 运行配置](https://www.jetbrains.com/help/idea/run-debug-configuration-java-application.html)。
 
@@ -726,7 +717,7 @@ docker compose --env-file .dev/.env -f .dev/compose.yml up -d mysql redis
 ```
 
 ```powershell
-# 终端 A：后端。使用模型时，先在此终端设置所需环境变量。
+# 终端 A：后端。模型 Key 在后台管理中配置。
 Set-Location D:\Project\github\ruoyi-ai
 java "-Dfile.encoding=UTF-8" -jar .\ruoyi-admin\target\ruoyi-admin.jar --spring.profiles.active=dev --spring.config.additional-location=file:./.dev/application-local.yml
 ```
@@ -781,10 +772,16 @@ pnpm run dev --port 5180 --strictPort
 | 用户端首次短暂空白 | 等待 Vite 首次编译，使用终端给出的地址；若一直空白，再检查浏览器 Console 和前端日志。 |
 | pnpm 提示 `ERR_PNPM_OUTDATED_LOCKFILE` 或 workspace 包缺失 | 确认在仓库根目录安装，使用配套 pnpm 版本，代码与锁文件来自同一版本。不要混用 npm 安装管理端。 |
 | 模型可以选择，但没有回答 | 检查后端进程的 Key、模型名称、厂商状态和接口响应；初始化记录不代表已获得服务权限。 |
-| 新建 Ollama 模型时报 HTTPS 校验错误 | 当前保存规则要求 HTTPS，参照第 11.3 节处理地址；Ollama HTTP 自检成功不等于已接入。 |
+| Ollama 自检成功，但知识库向量调用失败 | 检查模型分类、模型名称及后端到 Ollama 地址的连通性；容器内的 `127.0.0.1` 指向容器自身。 |
 | 上传一直等待或鉴权失败 | 检查默认对象存储是否仍指向外部示例服务，以及 MinIO 地址、桶名和凭据。 |
 | `Unknown column 'file_hash'` 或缺少 `fid` | 数据库缺少适用的 RAG 迁移；按第 5 节检查脚本与关键字段。 |
 | SQL 智能体没有可查询表 | 属于后续功能配置；按[智能体教程](../features/agent.md#sql-config)配置允许访问的业务表，基础登录不依赖此项。 |
+
+### 创建租户时如何填写过期时间
+
+开启 `tenant.enable: true` 后，有租户管理权限的超级管理员可创建租户。`POST /system/tenant` 的 `expireTime` 使用 `yyyy-MM-dd HH:mm:ss`，例如 `2027-09-11 00:00:00`；省略或传 `null` 表示不限制有效期。未带时区的时间按后端运行时区解释。`packageId` 填写已有套餐 ID，建议作为字符串传输，避免浏览器丢失大整数精度。
+
+后端通过 Spring 配置的 Jackson 构建器加载全局日期格式和自定义模块。扩展 `ObjectMapper` 时应保留这些配置，使租户请求与工作流 JSON 使用一致的序列化规则。
 
 ## 15. 确认安装完成 {#verification}
 

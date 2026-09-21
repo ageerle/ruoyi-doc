@@ -102,7 +102,7 @@ The retained local retrieval screenshots use the following Ollama configuration.
 See the [local embedding example](../getting-started/install.md) for installation and model downloads. A containerized backend needs an address reachable from its container; `127.0.0.1` inside a container refers to itself.
 
 ::: warning New configurations must satisfy current save rules
-`ChatModelCredentialPolicy.requirePersistableConfiguration()` requires HTTPS, so the HTTP address above cannot be saved as a new model. Existing working models can be used for verification. For a new Ollama model without authentication, provide a backend-accessible HTTPS endpoint and leave the key field untouched. API clients should omit `apiKey` or send `null`, not an empty string. The Ollama embedding adapter does not read a key; a gateway requiring authentication also needs adapter support. Cloud embedding providers need their own credential rules. See [Model management](./model.md#provider-extension).
+Local Ollama can use an HTTP or HTTPS address reachable by the backend. Leave the Key empty for services without authentication. The Ollama embedding adapter does not read a Key; authenticated gateways still require adapter support. Enter the actual API Key for cloud embedding providers such as Qianwen directly in ruoyi-admin Model Management. See [Model management](./model.md#configure-model).
 
 A dropdown entry only confirms the record exists. Local services must be running with the model downloaded; cloud credentials must match the actual adapter.
 :::

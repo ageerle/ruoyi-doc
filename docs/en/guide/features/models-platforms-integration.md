@@ -5,7 +5,7 @@ pageClass: platforms-guide
 
 # Model and external platform integration {#模型与外部平台接入}
 
-RuoYi AI can connect to **FastGPT**, **RAGFlow**, and other platforms exposing **OpenAI Chat Completions** or **Anthropic Messages** compatible APIs. Dedicated adapters for **Dify** and **Coze** are also present, but this version needs provider options and credential integration before they can be used.
+RuoYi AI can connect to **FastGPT**, **RAGFlow**, and other platforms exposing **OpenAI Chat Completions** or **Anthropic Messages** compatible APIs. Dedicated adapters for **Dify** and **Coze** are also present, and their application Keys are configured directly in Model Management.
 
 ## Supported platforms and connection methods {#supported-platforms}
 
@@ -15,8 +15,8 @@ Find your platform, confirm its protocol, and follow the corresponding configura
 | --- | --- | --- |
 | **FastGPT** | OpenAI-compatible API through `custom_api`; an application API key and App ID select the application. | [Prepare the application](#prepare-fastgpt) → [Add a model](#configure-model). |
 | **RAGFlow** | Chat assistant's OpenAI-compatible API through `custom_api`; the URL includes the Chat ID. | [RAGFlow setup](#ragflow). |
-| **Dify** | Dify App API, provider code `dify`; adapter exists, provider options and credentials need integration. | [Dify setup](#dify). |
-| **Coze** | Coze Bot API, provider code `coze`; adapter exists, provider options and credentials need integration. | [Coze setup](#coze). |
+| **Dify** | Dify App API, provider code `dify`; enter the application API Key directly. | [Dify setup](#dify). |
+| **Coze** | Coze Bot API, provider code `coze`; enter the access token directly. | [Coze setup](#coze). |
 | **Other OpenAI-compatible platforms** | `custom_api`, with the service's URL, model name, and credentials; verify compatibility. | [Choose a protocol](#configure-provider) → [Add a model](#configure-model). |
 | **Anthropic-compatible services** | `custom_anthropic` for the Messages API; verify compatibility. | [Anthropic-compatible setup](#anthropic-platforms). |
 
@@ -38,7 +38,7 @@ pnpm run dev:antd
 
 Replace the directory with your checkout; skip `pnpm install` if dependencies are installed. Open the terminal's URL, normally [http://localhost:5666](http://localhost:5666), sign in, and expand **Chat Management**.
 
-**Provider Management** selects the protocol implementation. **Model Management** supplies the application's address, model name, and credential reference. Both must use the same backend; the admin development proxy defaults to `http://127.0.0.1:6039`.
+**Provider Management** selects the protocol implementation. **Model Management** supplies the application's address, model name, and API Key. Both must use the same backend; the admin development proxy defaults to `http://127.0.0.1:6039`.
 
 If you just upgraded custom-protocol support, rebuild and restart the updated backend and admin frontend first.
 
@@ -56,7 +56,7 @@ The provider name identifies the service; its code selects the backend implement
 | --- | --- | --- |
 | OpenAI Chat Completions compatible, including FastGPT and RAGFlow | Custom OpenAI, `custom_api` | Bearer authentication, `/chat/completions`. |
 | Anthropic Messages compatible | Custom Anthropic, `custom_anthropic` | `x-api-key` authentication, `/messages`. |
-| Dify App API / Coze Bot API | Dedicated adapters, [section 6](#native-platforms) | Native protocols; credential integration is still required. |
+| Dify App API / Coze Bot API | Dedicated adapters, [section 6](#native-platforms) | Select the native provider and configure its Key in Model Management. |
 
 ::: tip Existing data
 Older `custom_api` records may be named “Custom Provider,” as in the screenshot. Check the code rather than creating a duplicate. Existing Dify or Coze rows also do not prove calls work; read the [current requirements](#native-platforms) first.
@@ -81,7 +81,7 @@ For an OpenAI-compatible service:
 
 Save and check the code and status. A tenant can have only one undeleted provider with a given code. If the code is duplicated, reuse the existing record.
 
-**Multiple OpenAI-compatible platforms can share this provider.** For example, FastGPT and RAGFlow both use `custom_api` but have separate model URLs and credential references. Selecting a custom provider clears the request address so you can enter it explicitly.
+**Multiple OpenAI-compatible platforms can share this provider.** For example, FastGPT and RAGFlow both use `custom_api` but have separate model URLs and API Keys. Selecting a custom provider clears the request address so you can enter it explicitly.
 
 ::: details How the provider selects implementation code
 For a normal chat request, `ChatServiceFacade` looks up the configuration by model name, then gets the implementation from `ChatServiceFactory` using `providerCode`:
@@ -111,26 +111,9 @@ Configure the application in FastGPT, verify it answers in the platform's test p
 
 FastGPT accepts a combined `<API_KEY>-<APP_ID>` credential so a generic OpenAI client does not need an additional `appId` in the body. The application workflow selects its actual model; you can name the RuoYi AI configuration `fastgpt-app`. See the [FastGPT chat API](https://doc.fastgpt.io/zh-CN/openapi/chat).
 
-### 3.2 Configure the address and key for the backend process {#_3-2-把地址和密钥配置到后端进程}
+### 3.2 Enter the address and Key in Model Management {#_3-2-把地址和密钥配置到后端进程}
 
-Set this environment-variable pair in the terminal, IDE run configuration, or container that starts the **RuoYi AI backend**:
-
-```text
-CUSTOM_OPENAI_FASTGPT_BASE_URL=https://fastgpt.example.com/api/v1
-CUSTOM_OPENAI_FASTGPT_API_KEY=<API_KEY>-<APP_ID>
-```
-
-Replace the domain, API key, and App ID. For Windows source development, set them in the PowerShell terminal that launches Java:
-
-```powershell
-$env:CUSTOM_OPENAI_FASTGPT_BASE_URL = 'https://fastgpt.example.com/api/v1'
-$env:CUSTOM_OPENAI_FASTGPT_API_KEY = '<API_KEY>-<APP_ID>'
-# 接着在这个终端中启动后端，或将同样的变量配置到 IDE 的后端运行配置。
-```
-
-**Restart an already-running backend to load new variables.** Setting them in another terminal or a frontend `.env` will not make them available to that Java process.
-
-The model form will use `env:CUSTOM_OPENAI_FASTGPT_API_KEY`. `env:` marks a reference; the actual secret stays in the backend environment. The backend replaces `_API_KEY` with `_BASE_URL` to find the paired address. It must match the model request address at both save time and call time.
+In ruoyi-admin, set the model address to your FastGPT base URL and enter `<API_KEY>-<APP_ID>` directly as the Key. No backend environment variables or restart are required.
 
 ### 3.3 Verify the platform API independently {#_3-3-先确认平台接口能够独立调用}
 
@@ -174,13 +157,13 @@ Select the provider configured in section 2, then fill in:
 | Category | Chat | Stored as `chat`. |
 | Model name | `fastgpt-app` | Identifies the record and is sent as `model`. Avoid duplicate names within the tenant. |
 | Description | `FastGPT Knowledge Assistant` | Preferred display name in the user app. |
-| Request address | `https://fastgpt.example.com/api/v1` | Matches `CUSTOM_OPENAI_FASTGPT_BASE_URL`. |
-| Key | `env:CUSTOM_OPENAI_FASTGPT_API_KEY` | Reference to the backend variable. |
+| Request address | `https://fastgpt.example.com/api/v1` | Use your service URL. |
+| Key | `<API_KEY>-<APP_ID>` | Enter the actual combined value. |
 | Notes | Optional | Describe the application's purpose. |
 
-![FastGPT model form with protocol, category, request address, and credential reference](/images/platforms/fastgpt-model-form.png)
+![FastGPT model form with protocol, category, request address, and API Key](/images/platforms/fastgpt-model-form.png)
 
-The example-domain form shown here was not submitted. Replace the address and set the backend variables before saving.
+The example-domain form shown here was not submitted. Replace the address and enter the actual application Key before saving.
 
 The request address is an **API Base URL**. The OpenAI client appends `/chat/completions`, producing:
 
@@ -194,7 +177,7 @@ Custom protocols also accept the full matching endpoint; the backend removes its
 
 After saving, confirm `fastgpt-app` appears with the correct provider and Chat category. Saving confirms validation passed; you must still send a message.
 
-If `CUSTOM_OPENAI_FASTGPT_BASE_URL` is missing, check the **Java process's** environment. For an address mismatch, compare the model URL and paired `_BASE_URL`. When editing a custom model, leaving the key empty retains the existing reference.
+Confirm the saved address and application Key. When editing, leave the Key empty to retain its existing value or enter a new Key to replace it.
 
 ### 4.4 Connect RAGFlow {#ragflow}
 
@@ -206,11 +189,9 @@ Prepare and test a RAGFlow chat assistant, obtain its **Chat ID** and **API key*
 | Category | Chat (`chat`). |
 | Model name | A valid name from the deployed version's API documentation. |
 | Request address | `https://ragflow.example.com/api/v1/openai/<CHAT_ID>`. |
-| Model key | `env:CUSTOM_OPENAI_RAGFLOW_API_KEY`. |
-| Backend key variable | `CUSTOM_OPENAI_RAGFLOW_API_KEY`, containing the RAGFlow key. |
-| Backend URL variable | `CUSTOM_OPENAI_RAGFLOW_BASE_URL`, matching the model address. |
+| Model key | Actual service API Key. |
 
-Replace the domain and `<CHAT_ID>`, configure variables, restart Java, and save. The final path is `/api/v1/openai/<CHAT_ID>/chat/completions`; do not retain an extra trailing `/chat` in this project's base URL. Follow the API documentation shipped with your deployed version; see [RAGFlow OpenAI-compatible API](https://ragflow.io/docs/http_api_reference#openai-compatible-api). Verify through [section 5](#verify-chat).
+Replace the domain and `<CHAT_ID>`, enter the actual Key in Model Management, and save. The final path is `/api/v1/openai/<CHAT_ID>/chat/completions`; do not retain an extra trailing `/chat` in this project's base URL. Follow the API documentation shipped with your deployed version; see [RAGFlow OpenAI-compatible API](https://ragflow.io/docs/http_api_reference#openai-compatible-api). Verify through [section 5](#verify-chat).
 
 ### 4.5 Connect an Anthropic-compatible service {#anthropic-platforms}
 
@@ -222,13 +203,11 @@ Confirm Messages compatibility and obtain a model ID, URL, and key. Create or en
 | Category | Chat (`chat`). |
 | Model name | The service's published model ID. |
 | Request address | For example, `https://gateway.example.com/v1`; use the actual base URL. |
-| Model key | `env:CUSTOM_ANTHROPIC_GATEWAY_API_KEY`. |
-| Backend key variable | `CUSTOM_ANTHROPIC_GATEWAY_API_KEY`. |
-| Backend URL variable | `CUSTOM_ANTHROPIC_GATEWAY_BASE_URL`, matching the model address. |
+| Model key | Actual service API Key. |
 
-Configure variables, restart Java, and save. The Anthropic client sends `x-api-key` and a version header; this example calls `/v1/messages`. An OpenAI `/chat/completions` URL is not interchangeable. See [Custom provider protocols](./model.md#custom-provider) for curl examples and [section 5](#verify-chat) for user-app checks.
+Enter the actual Key in Model Management and save. The Anthropic client sends `x-api-key` and a version header; this example calls `/v1/messages`. An OpenAI `/chat/completions` URL is not interchangeable. See [Custom provider protocols](./model.md#custom-provider) for curl examples and [section 5](#verify-chat) for user-app checks.
 
-Both custom protocols currently require HTTPS. Platforms using one protocol share its provider row but configure separate model addresses. Disabling that provider affects all its models.
+Both custom protocols support HTTP or HTTPS addresses. Platforms using one protocol share its provider row but configure separate model addresses. Disabling that provider affects all its models.
 
 ## 5. Select the model and chat in the user app {#verify-chat}
 
@@ -280,32 +259,32 @@ Then test use in [agents](./agent.md) or [workflows](./orchestration.md). Verify
 }
 ```
 
-The actual request also includes a session ID and other fields. The backend reads `providerCode`, `apiHost`, and the credential reference, then calls the matching client. Third-party API keys are not configured in the user app.
+The actual request also includes a session ID and other fields. The backend reads `providerCode`, `apiHost`, and the API Key, then calls the matching client. Third-party API keys are not configured in the user app.
 :::
 
 ## 6. Current Dify and Coze integration {#native-platforms}
 
-These platforms use dedicated protocols. `DifyChatServiceImpl` and `CozeChatServiceImpl` exist, but the unified credential policy does not yet support their credentials, and the admin's static Add Provider options omit `dify` and `coze`. **Complete the integration code first; entering a platform key in a model is insufficient.**
+Dify and Coze use dedicated adapters. Enable the provider and enter the application Key or access token directly in Model Management.
 
 ### 6.1 Dify {#dify}
 
 1. Create and publish a chat application, generate its **App API key**, obtain the service API URL, and verify it through Dify's API.
-2. Follow the [extension steps](#extend-provider) to add provider options, credential references, and URL binding. `apiHost` is usually `https://api.dify.ai/v1` or your self-hosted URL; the model name is an internal RuoYi AI configuration name.
-3. Rebuild, restart, select the model, and verify answers, follow-ups, and saved sessions through [section 5](#verify-chat). See [Dify API getting started](https://docs.dify.ai/en/api-reference/guides/get-started).
+2. Enable the `dify` provider. Set the model address to `https://api.dify.ai/v1` or your self-hosted API URL, choose a local model name, and enter the App API Key directly.
+3. Save the model, select it in the user app, and verify answers, follow-ups, and saved sessions through [section 5](#verify-chat). See [Dify API getting started](https://docs.dify.ai/en/api-reference/guides/get-started).
 
 The adapter combines the current message and history into `query`, with `inputs` fixed to an empty object. It parses Dify streaming events and uses `blocking` mode for complete responses. Applications requiring custom `inputs` need field mapping. `message_replace` changes final saved content but cannot replace fragments already sent to the frontend.
 
 ### 6.2 Coze {#coze}
 
 1. Publish the Bot as an API service, obtain its **Bot ID** and a token with chat permission, and verify the native API.
-2. Add provider options, credential references, and address binding through the [extension steps](#extend-provider). **Use the Bot ID as the model name.** The China-region host is `https://api.coze.cn`; host, Bot, and token must belong to the same region.
-3. Rebuild, restart, and follow [section 5](#verify-chat). See [Coze SDK getting started](https://docs.coze.cn/developer_guides_python_getting_started).
+2. Enable the `coze` provider and enter its access token directly as the model Key. Use the Bot ID as the model name and the API host for the same region.
+3. Save the model and follow [section 5](#verify-chat). See [Coze SDK getting started](https://docs.coze.cn/developer_guides_python_getting_started).
 
 `CozeChatServiceImpl` uses the model name as `botID`, passes RuoYi AI history, and sets `autoSaveHistory=false`. Complete responses are also assembled by consuming Coze streaming events.
 
 ### 6.3 Shared requirements {#_6-3-两个平台共用的接入条件}
 
-Both adapters call `resolveApiKeyForConfiguredEndpoint()`. Extend `ChatModelCredentialPolicy` and `ChatModelSecretReference` after adding options or database records so saving and calling follow the same rules.
+Both adapters use the Key saved in Model Management. Different models can connect different applications or Bots with their own credentials.
 
 Do not pass Dify `/chat-messages` or Coze `/v3/chat` URLs directly to `custom_api`. If a gateway converts protocols, verify its OpenAI or Anthropic compatibility first, then use the custom-protocol setup above.
 
@@ -315,10 +294,6 @@ Do not pass Dify `/chat-messages` or Coze `/v3/chat` URLs directly to `custom_ap
 | --- | --- |
 | Provider missing from the model form | Confirm it exists and is enabled in the same tenant; reopen the form. |
 | Chat category missing | Check `chat` in `chat_model_category`, refresh the dictionary cache and page. |
-| Missing address environment variable on save | Set the paired `_BASE_URL` in the backend environment and restart. |
-| Request URL differs from the credential-bound URL | Compare the full model URL and paired `_BASE_URL`, including the path. |
-| Credential reference rejected or protocol mismatch | Use `env:CUSTOM_OPENAI_…_API_KEY` or `env:CUSTOM_ANTHROPIC_…_API_KEY` as appropriate; no plaintext or another provider's reference. |
-| Save succeeds but calls report missing variables | URL validation passed, but the actual `_API_KEY` is absent or empty in Java's environment. |
 | 401 / 403 | Check key, permission, region, and application authorization; for FastGPT, also check the key/App ID combination. |
 | 404 | Inspect the final path: usually `/api/v1/chat/completions` for FastGPT; RAGFlow also includes Chat ID. |
 | Model missing in the user app | Check tenant, `chat` category, provider status, and reload the selector. |
@@ -332,12 +307,12 @@ Generic protocols cover standard chat using an address, model name, and standard
 
 1. Define a unique code in `ChatModeType`, implement `AbstractChatService`, and register it with `@Service`. Return the same code from `getProviderName()` so the factory discovers it.
 2. Implement `buildStreamingChatModel()` and `buildChatModel()`, mapping request fields, authentication, complete responses, and stream events.
-3. Add independent credential references and trusted addresses in `ChatModelSecretReference` and `ChatModelCredentialPolicy`. Apply consistent validation to save, batch key updates, and calls.
+3. Read the API Key from the model configuration with `ChatModelVo.getApiKey()` and pass it to the client.
 4. Add the provider to `apps/web-antd/src/views/chat/provider/options.ts`. Extend model forms, backend fields, and persistence for custom parameters as needed.
 5. Test normal answers, authentication failures, empty output, timeouts, and interrupted streams; rebuild and restart.
 6. Complete this guide's provider-to-model-to-user-chat flow, then test agents or workflows.
 
-Adapters are under `ruoyi-modules/ruoyi-chat/src/main/java/org/ruoyi/service/chat/impl/provider/`. Credential rules are under `ruoyi-common/ruoyi-common-chat/src/main/java/org/ruoyi/common/chat/security/`.
+Adapters are under `ruoyi-modules/ruoyi-chat/src/main/java/org/ruoyi/service/chat/impl/provider/`.
 
 <style>
 .platforms-guide .vp-doc table {

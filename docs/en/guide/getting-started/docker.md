@@ -67,7 +67,7 @@ The application can start without a cloud model key, but containers do not provi
 | DeepSeek, Zhipu, Bailian, OpenAI, and similar providers | The provider's API key |
 | External apps, search, mail, or multimodal services | Addresses and credentials required by the relevant module |
 
-Missing credentials prevent the corresponding feature from working, rather than preventing the base system from starting. Store keys in environment variables or backend credential fields and keep them out of Git.
+Missing credentials prevent the corresponding feature from working, rather than preventing the base system from starting. Enter model API Keys directly in **ruoyi-admin → Chat Management → Model Management**; no Compose environment variables are required for model Keys. Configure other credentials according to their feature guides and keep them out of Git.
 
 ## 2. Complete prebuilt-image deployment {#image-deploy}
 
@@ -242,7 +242,7 @@ docker exec ruoyi-ai-ollama ollama pull qwen2.5:1.5b
 docker exec ruoyi-ai-ollama ollama pull all-minilm:v2
 ~~~
 
-The backend can reach this container at `http://ruoyi-ai-ollama:11434`. This is a Docker connectivity address; newly saved models require HTTPS. An Ollama model without authentication needs no key, while an authenticated gateway needs adapter support as well. See [Model Management](/en/guide/features/model#provider-extension) and [Knowledge Base](/en/guide/features/knowledge) for chat and embedding configuration.
+The backend can reach this container at `http://ruoyi-ai-ollama:11434`; use this address in the model configuration. Leave the Key empty for Ollama without authentication. Authenticated gateways need adapter support. See [Model Management](/en/guide/features/model#provider-extension) and [Knowledge Base](/en/guide/features/knowledge) for chat and embedding configuration.
 
 For Ollama running on the host:
 
