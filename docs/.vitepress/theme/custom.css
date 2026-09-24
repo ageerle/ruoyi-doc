@@ -434,8 +434,9 @@ body {
   }
 
   .VPDoc.has-sidebar > .container {
-    margin-left: 0;
-    justify-content: flex-start;
+    margin-inline: auto;
+    justify-content: center;
+    max-width: 1076px !important;
   }
 
   .VPNavBar.has-sidebar > .wrapper > .container > .title {
@@ -446,6 +447,22 @@ body {
   .VPNavBar.has-sidebar > .wrapper > .container > .content {
     padding-left: var(--vp-sidebar-width);
     padding-right: 32px;
+  }
+}
+
+/* Expand the reading column gradually on desktop monitors, while keeping
+   the article and outline centered together beside the fixed sidebar. */
+@media (min-width: 1600px) {
+  .VPDoc.has-sidebar > .container {
+    max-width: clamp(1076px, calc(100vw - 524px), 1360px) !important;
+  }
+
+  .VPDoc.has-sidebar > .container > .content {
+    max-width: clamp(820px, calc(100vw - 780px), 1104px) !important;
+  }
+
+  .VPDoc.has-sidebar > .container > .content > .content-container {
+    max-width: 1040px !important;
   }
 }
 

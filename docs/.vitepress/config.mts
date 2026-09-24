@@ -49,6 +49,7 @@ export default defineConfig({
           { text: '快速开始', link: '/guide/getting-started/projection' },
           { text: '核心功能', link: '/guide/features/model', activeMatch: '/guide/features/' },
           { text: '扩展功能', link: '/guide/extensions/doc' },
+          { text: '商业版', link: '/guide/commercial/', activeMatch: '/guide/commercial/' },
           { text: '更新日志', link: changelogLink(changelogMonths[0]) },
         ],
         search: {
@@ -73,6 +74,12 @@ export default defineConfig({
         },
         sidebar: {
           '/guide/': [
+            {
+              text: '商业版',
+              items: [
+                { text: '商业版发布与价格', link: '/guide/commercial/' },
+              ]
+            },
             {
               text: '快速开始',
               items: [

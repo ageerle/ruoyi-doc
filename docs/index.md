@@ -17,6 +17,9 @@ hero:
     - theme: alt
       text: 演示地址 ->
       link: https://web.ruoyiai.chat
+    - theme: alt
+      text: 商业版发布 ->
+      link: /guide/commercial/
 
 features:
   - title: 模型管理
